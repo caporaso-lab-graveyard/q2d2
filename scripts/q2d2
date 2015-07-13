@@ -9,16 +9,18 @@ from q2d2 import markdown_templates
 # click me...
 
 command = argv[1]
-output_dir = argv[2]
+analysis_dir = argv[2]
 
-os.makedirs(output_dir, exist_ok=True)
+os.makedirs(analysis_dir, exist_ok=True)
 
-output_fn = os.path.join(output_dir, '%s.md' % command)
+output_fn = os.path.join(analysis_dir, '%s.md' % command)
 
 if os.path.exists(output_fn):
     print("%s has already been generated. Please remove or specify a "
-          "different output directory." % output_fn)
+          "different analysis directory." % output_fn)
     exit(1)
 
-open(output_fn, 'w').write(markdown_templates[command](argv[3], argv[4], ' '.join(argv)))
+markdown_s = markdown_templates[command](os.path.abspath(argv[3]), argv[4], ' '.join(argv), analysis_dir)
+open(output_fn, 'w').write(markdown_s)
+
 subprocess.call(['ipython', 'notebook', output_fn])

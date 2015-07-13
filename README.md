@@ -13,14 +13,16 @@ pip install -e ~/code/q2d2
 
 ```bash
 
-q2d2 seqs-to-biom <analysis-name> <fasta|fastq|fasta.gz|fastq.gz> <exact|split|all|random|last>
+# q2d2 seqs-to-biom <analysis-name> <fasta|fastq|fasta.gz|fastq.gz> <exact|split|all|rand|last>
+./scripts/q2d2 seqs-to-biom example-analysis example-data/keyboard/forensic-seqs.fna exact
 ```
 
 Execute the Jupyter notebook that is opened.
 
 ```bash
 
-q2d2 biom-to-diversity <df.gz> <map.tsv> <sampling-depth>
+# q2d2 biom-to-diversity <sample-metadata.tsv> <color-by>
+./scripts/q2d2 biom-to-pcoa example-analysis example-data/keyboard/forensic-map.txt Subject
 ```
 
 Execute the Jupyter notebook that is opened.
