@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+from sys import argv
+import os.path
+import subprocess
+
+from q2d2 import markdown_templates
+
+# click me...
+
+command = argv[1]
+output_dir = argv[2]
+
+os.makedirs(output_dir, exist_ok=True)
+
+output_fn = os.path.join(output_dir, '%s.md' % command)
+
+if os.path.exists(output_fn):
+    print("%s has already been generated. Please remove or specify a "
+          "different output directory." % output_fn)
+    exit(1)
+
+open(output_fn, 'w').write(markdown_templates[command](argv[3:]))
+subprocess.call(['ipython', 'notebook', output_fn])
