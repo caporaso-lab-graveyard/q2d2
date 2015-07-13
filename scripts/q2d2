@@ -20,5 +20,5 @@ if os.path.exists(output_fn):
           "different output directory." % output_fn)
     exit(1)
 
-open(output_fn, 'w').write(markdown_templates[command](argv[3:]))
+open(output_fn, 'w').write(markdown_templates[command](argv[3], argv[4], ' '.join(argv)))
 subprocess.call(['ipython', 'notebook', output_fn])

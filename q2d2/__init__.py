@@ -2,12 +2,16 @@
 
 __version__ = "0.0.0-dev"
 
+import random
+import io
+from collections import defaultdict
+import hashlib
+
 import skbio
 import marisa_trie
-from collections import defaultdict
 import numpy as np
 import pandas as pd
-import random
+
 
 def exact(trie, seq):
     return [(trie[str(seq)], 1.)]
@@ -75,6 +79,14 @@ seqs_to_biom_md_template = """
 
 # Construction of a BIOM table.
 
+Summary of what you did to prepare this analysis.
+```
+q2d2 version: {2}
+input filepath: {0}
+input filepath md5: {3}
+command: {4}
+```
+
 In this first step, we'll construct the [Trie](https://en.wikipedia.org/wiki/Trie)
 data structure, which is used for grouping sequences into OTUs.
 
@@ -88,7 +100,7 @@ data structure, which is used for grouping sequences into OTUs.
 >>> print("%d sequences from %d samples were used to build the Trie." % (sequence_count, sample_count))
 ```
 
-Next, we'll group our sequences, computing counts using the {1} method that you passed in on the command line.
+Next, we'll group our sequences, computing counts using the ``{1}`` method that you passed in on the command line.
 
 ```python
 >>> from q2d2 import biom_from_trie, count_fs
@@ -103,12 +115,12 @@ Finally, we'll get summary statistics on our table.
 >>> table_summary(biom)
 ```
 
+
+
 """
 
-def get_seqs_to_biom_markdown(arg):
-    print(arg)
-    seqs_fp = arg[0]
-    count_f = arg[1]
-    return seqs_to_biom_md_template.format(seqs_fp, count_f)
+def get_seqs_to_biom_markdown(seqs_fp, count_f, command):
+
+    return seqs_to_biom_md_template.format(seqs_fp, count_f, __version__, "dummy-md5", command)
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown}
