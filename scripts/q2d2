@@ -47,7 +47,10 @@ def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
 @cli.command()
 @click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
 def start_server(analysis_root):
-    subprocess.call(['ipython', 'notebook', analysis_root])
+    markdown_s = markdown_templates['index'](analysis_root)
+    output_fn = _prep_files(analysis_root, 'index.md')
+    open(output_fn, 'w').write(markdown_s)
+    subprocess.call(['ipython', 'notebook', os.path.join(analysis_root, 'index.md')])
 
 if __name__ == "__main__":
     cli()

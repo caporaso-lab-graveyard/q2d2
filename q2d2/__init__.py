@@ -8,6 +8,7 @@ from collections import defaultdict
 import hashlib
 import os
 import shutil
+import glob
 
 import marisa_trie
 import numpy as np
@@ -115,4 +116,19 @@ def get_biom_to_pcoa_markdown(map_fp, color_by, command, output_fp):
     result = biom_to_pcoa_md_template.format('.sample-md', color_by, __version__, "dummy-md5", command)
     return result
 
-markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown, 'biom-to-pcoa': get_biom_to_pcoa_markdown}
+def get_index_markdown(analysis_root):
+    index_md_template = get_markdown_template('index.md')
+    md_fps = glob.glob(os.path.join(analysis_root, '*.md'))
+    md_fps.sort()
+    toc = []
+    for md_fp in md_fps:
+        md_fn = os.path.split(md_fp)[1]
+        toc.append(' * [%s](%s)' % (md_fn.split('.')[1].replace('-', ' ').title(), md_fn))
+    toc = '\n'.join(toc)
+    result = index_md_template.format(toc)
+    return result
+
+
+markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
+                      'biom-to-pcoa': get_biom_to_pcoa_markdown,
+                      'index': get_index_markdown}
