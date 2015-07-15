@@ -23,4 +23,4 @@ if os.path.exists(output_fn):
 markdown_s = markdown_templates[command](os.path.abspath(argv[3]), argv[4], ' '.join(argv), analysis_dir)
 open(output_fn, 'w').write(markdown_s)
 
-subprocess.call(['ipython', 'notebook', output_fn])
+#subprocess.call(['ipython', 'notebook', output_fn])
