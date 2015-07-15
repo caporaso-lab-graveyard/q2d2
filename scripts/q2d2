@@ -3,24 +3,51 @@
 from sys import argv
 import os.path
 import subprocess
+import click
 
 from q2d2 import markdown_templates
 
-# click me...
+@click.group()
+def cli():
+    pass
 
-command = argv[1]
-analysis_dir = argv[2]
+def _prep_files(analysis_root, output_fn):
+    os.makedirs(analysis_root, exist_ok=True)
+    result = os.path.join(analysis_root, output_fn)
+    if os.path.exists(result):
+        print("%s has already been generated. Please remove or specify a "
+              "different analysis directory." % result)
+        exit(1)
+    return result
 
-os.makedirs(analysis_dir, exist_ok=True)
+@cli.command()
+@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
+@click.option('--sequences-filepath', "sequences_filepath", help="Path to the sequences in fasta, "
+                                           "fastq, fasta.gz, fastq.gz... "
+                                           "Actually... just pass the "
+                                           "file, we'll figure out what it is.")
+def seqs_to_biom(analysis_root, sequences_filepath):
+    os.makedirs(analysis_root, exist_ok=True)
+    output_fn = _prep_files(analysis_root, '0.seqs-to-biom.md')
+    markdown_s = markdown_templates['seqs-to-biom'](sequences_filepath, "exact", "dummy-command", analysis_root)
+    open(output_fn, 'w').write(markdown_s)
 
-output_fn = os.path.join(analysis_dir, '%s.md' % command)
+@cli.command()
+@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
+@click.option('--metadata-filepath', "metadata_filepath",
+              help="Path to the sample metadata in tsv.")
+@click.option('--color-by', "color_by",
+              help="Metadata category to color samples by in PCoA.")
+def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
+    os.makedirs(analysis_root, exist_ok=True)
+    output_fn = _prep_files(analysis_root, '1.biom-to-pcoa.md')
+    markdown_s = markdown_templates['biom-to-pcoa'](metadata_filepath, color_by, "dummy-command", analysis_root)
+    open(output_fn, 'w').write(markdown_s)
 
-if os.path.exists(output_fn):
-    print("%s has already been generated. Please remove or specify a "
-          "different analysis directory." % output_fn)
-    exit(1)
+@cli.command()
+@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
+def start_server(analysis_root):
+    subprocess.call(['ipython', 'notebook', analysis_root])
 
-markdown_s = markdown_templates[command](os.path.abspath(argv[3]), argv[4], ' '.join(argv), analysis_dir)
-open(output_fn, 'w').write(markdown_s)
-
-#subprocess.call(['ipython', 'notebook', output_fn])
+if __name__ == "__main__":
+    cli()
