@@ -9,24 +9,9 @@
 # ----------------------------------------------------------------------------
 
 import os
-import platform
 import re
 import ast
 from setuptools import find_packages, setup
-from setuptools.extension import Extension
-from setuptools.command.build_ext import build_ext as _build_ext
-
-
-# Bootstrap setup.py with numpy
-# Huge thanks to coldfix's solution
-# http://stackoverflow.com/a/21621689/579416
-class build_ext(_build_ext):
-    def finalize_options(self):
-        _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
-        import numpy
-        self.include_dirs.append(numpy.get_include())
 
 # version parsing from __init__ pulled from Flask's setup.py
 # https://github.com/mitsuhiko/flask/blob/master/setup.py
@@ -69,11 +54,12 @@ setup(name='q2d2',
       url='http://caporasolab.us',
       test_suite='nose.collector',
       packages=find_packages(),
-      cmdclass={'build_ext': build_ext},
+      scripts=['scripts/q2d2'],
+      package_data={'q2d2': ['q2d2/markdown/*md']},
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
           'scikit-bio >= 0.4.0',
-          'IPython[notebook] >= 3.2.0',
+          'IPython >= 3.2.0',
           'ipymd',
           'click',
           'marisa-trie'
@@ -82,5 +68,4 @@ setup(name='q2d2',
                                "python-dateutil"],
                       'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
-      package_data={}
       )
