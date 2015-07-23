@@ -128,6 +128,17 @@ def get_index_markdown(analysis_root):
     result = index_md_template.format(toc)
     return result
 
+def even_sampling_depth_summary(sampling_depth, biom):
+    counts = biom.T.sum()
+    samples_retained = (counts >= sampling_depth)
+    num_samples_retained = samples_retained.sum()
+    num_sequences_retained = num_samples_retained * sampling_depth
+    percent_samples_retained = num_samples_retained * 100 / len(counts)
+    percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
+    out_s = ("Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
+             "{3} ({4:.2f}%) of the sequences.")
+    print(out_s.format(sampling_depth, num_samples_retained, percent_samples_retained,
+                       num_sequences_retained, percent_sequences_retained))
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,

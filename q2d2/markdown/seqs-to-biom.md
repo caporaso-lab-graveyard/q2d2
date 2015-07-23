@@ -36,6 +36,17 @@ Then, we'll get summary statistics on our table.
 >>> table_summary(biom)
 ```
 
+We can use an interactive widget to choose an even sampling depth, which will be important for analyses that require rarefaction.
+
+```python
+>>> from IPython.html.widgets import interact, fixed, IntSlider
+>>> from q2d2 import even_sampling_depth_summary
+>>> sampling_depth_slider = IntSlider(min=biom.T.sum().describe()['min'],
+...                                   max=biom.T.sum().describe()['max'],
+...                                   value=biom.T.sum().describe()['50%'])
+>>> interact(even_sampling_depth_summary, sampling_depth=sampling_depth_slider, biom=fixed(biom))
+```
+
 Finally, we'll store the table so we can use it again another time.
 
 ```python
