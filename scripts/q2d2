@@ -14,12 +14,14 @@ def cli():
 def _prep_files(analysis_root, output_fn, remove_existing=False):
     os.makedirs(analysis_root, exist_ok=True)
     result = os.path.join(analysis_root, output_fn)
-    if remove_existing:
-        os.remove(result)
+
     if os.path.exists(result):
-        print("%s has already been generated. Please remove or specify a "
-              "different analysis directory." % result)
-        exit(1)
+        if remove_existing:
+            os.remove(result)
+        else:
+            print("%s has already been generated. Please remove or specify a "
+                  "different analysis directory." % result)
+            exit(1)
     return result
 
 @cli.command()
