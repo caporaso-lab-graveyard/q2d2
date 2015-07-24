@@ -13,6 +13,7 @@ import glob
 import marisa_trie
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from IPython.html.widgets import interactive, fixed, IntSlider
 from IPython.display import display
 from scipy.optimize import minimize_scalar
@@ -151,21 +152,41 @@ def _get_depth_for_max_sequence_count(counts):
 def explore_sampling_depth(biom):
     counts = biom.T.sum()
     count_summary = counts.describe()
+    total_num_samples = len(counts)
+    total_num_sequences = counts.sum()
     depth_for_max_sequence_count = _get_depth_for_max_sequence_count(counts)
     sampling_depth_slider = IntSlider(min=count_summary['min'],
                                       max=count_summary['max'],
                                       value=depth_for_max_sequence_count)
+    default_samples_retained, default_num_samples_retained, default_num_sequences_retained = \
+            _summarize_even_sampling_depth(depth_for_max_sequence_count, counts)
+
+    default_percent_samples_retained = default_num_samples_retained * 100 / total_num_samples
+    default_percent_sequences_retained = default_num_sequences_retained * 100 / total_num_sequences
+
+    label_s = "Depth {0}: {1:.2f}% of sequences and {2:.2f}% of samples retained."
+
     def f(even_sampling_depth):
         samples_retained, num_samples_retained, num_sequences_retained = \
             _summarize_even_sampling_depth(even_sampling_depth, counts)
-        percent_samples_retained = num_samples_retained * 100 / len(counts)
-        percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
-        out_s = ("Sampling depth of {5} will retain the largest number of sequences.\n"
-                 "Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
-                 "{3} ({4:.2f}%) of the sequences.")
-        print(out_s.format(even_sampling_depth, num_samples_retained,
-                           percent_samples_retained, num_sequences_retained,
-                           percent_sequences_retained, depth_for_max_sequence_count))
+        percent_samples_retained = num_samples_retained * 100 / total_num_samples
+        percent_sequences_retained = num_sequences_retained * 100 / total_num_sequences
+        ax = sns.distplot(counts)
+        ax.set_xlabel("Number of sequences per sample")
+        ax.set_ylabel("Frequency")
+        line_label = label_s.format(depth_for_max_sequence_count,
+                                    default_percent_sequences_retained,
+                                    default_percent_samples_retained)
+        ax.plot([depth_for_max_sequence_count, depth_for_max_sequence_count], ax.get_ylim(),
+                'k--', label=line_label)
+
+        line_label = label_s.format(even_sampling_depth,
+                                    percent_sequences_retained,
+                                    percent_samples_retained)
+        ax.plot([even_sampling_depth, even_sampling_depth], ax.get_ylim(),
+                'k-', label=line_label)
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ax
     w = interactive(f, even_sampling_depth=sampling_depth_slider)
     display(w)
 

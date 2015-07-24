@@ -36,9 +36,10 @@ Then, we'll get summary statistics on our table.
 >>> table_summary(biom)
 ```
 
-We can next explore how choosing an even sampling depth (important for analyses that require rarefaction, such as computing community richness or between-sample distances) will affect the number of sequences as samples that are included in those analyses. In the Jupyter Notebook, this analysis will be interactive. 
+We can next explore how choosing an even sampling depth (important for analyses that require rarefaction, such as computing community richness or between-sample distances) will affect the number of sequences as samples that are included in those analyses. In the Jupyter Notebook, this analysis will be interactive. The dashed line in the plot illustrates the even sampling depth at which the largest number of sequences are retained, but it is very likely that you want to explore the space around this value in the context of which of your samples will be retained and which will be discarded.
 
 ```python
+>>> %matplotlib inline
 >>> from q2d2 import explore_sampling_depth
 >>> explore_sampling_depth(biom)
 ```
