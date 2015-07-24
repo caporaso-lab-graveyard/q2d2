@@ -3,8 +3,8 @@ First, we'll load the table and the sample metadata.
 ```python
 >>> import pandas as pd
 >>> sample_md = pd.read_csv('{0}', sep='\t', index_col=0)
->>> from q2d2 import load_table
->>> table = load_table()
+>>> from q2d2 import load_rarified_table
+>>> table = load_rarified_table()
 ```
 
 Next, we compute Bray-Curtis distances, and then principal coordinates. This process

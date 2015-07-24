@@ -44,9 +44,24 @@ We can next explore how choosing an even sampling depth (important for analyses 
 >>> explore_sampling_depth(biom)
 ```
 
-Finally, we'll store the table so we can use it again another time.
+Next, we'll rarify the table to an even number of sequences per sample. If you want to overwrite the default even sampling depth, do that by setting the value of ``user_supplied_even_sampling_depth`` here.
 
 ```python
->>> from q2d2 import store_table
->>> store_table(biom)
+>>> from q2d2 import get_default_even_sampling_depth
+>>> user_supplied_even_sampling_depth = None
+>>> even_sampling_depth = user_supplied_even_sampling_depth or get_default_even_sampling_depth(biom)
 ```
+
+```python
+>>> from q2d2 import rarify
+>>> rarified_biom = rarify(biom, even_sampling_depth=even_sampling_depth)
+>>> print("Rarified table to", even_sampling_depth, "sequences per sample.")
+```
+
+```python
+>>> from q2d2 import store_table, store_rarified_table
+>>> store_table(biom)
+>>> store_rarified_table(biom)
+```
+
+Finally, we'll store the table so we can use it again another time.

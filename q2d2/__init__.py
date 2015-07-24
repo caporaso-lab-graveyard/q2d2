@@ -21,6 +21,7 @@ from scipy.optimize import minimize_scalar
 import skbio
 from skbio.diversity.beta import pw_distances
 from skbio.stats.ordination import PCoA
+from skbio.stats import subsample_counts
 
 def exact(trie, seq):
     return [(trie[str(seq)], 1.)]
@@ -104,6 +105,13 @@ def store_table(table):
     table_path = os.path.abspath('.table.biom')
     return table.to_csv(table_path)
 
+def load_rarified_table():
+    return pd.DataFrame.from_csv('.rarified-table.biom')
+
+def store_rarified_table(table):
+    table_path = os.path.abspath('.rarified-table.biom')
+    return table.to_csv(table_path)
+
 def get_markdown_template(fn):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
     return open(os.path.join(base_dir, "markdown", fn)).read()
@@ -149,6 +157,10 @@ def _get_depth_for_max_sequence_count(counts):
                           method='bounded')
     return int(np.floor(res.x))
 
+def get_default_even_sampling_depth(biom):
+    counts = biom.T.sum()
+    return _get_depth_for_max_sequence_count(counts)
+
 def explore_sampling_depth(biom):
     counts = biom.T.sum()
     count_summary = counts.describe()
@@ -189,6 +201,19 @@ def explore_sampling_depth(biom):
         ax
     w = interactive(f, even_sampling_depth=sampling_depth_slider)
     display(w)
+
+def rarify(biom, even_sampling_depth):
+    data = []
+    sample_ids = []
+    for e in biom.index:
+        count_vector = biom.loc[e]
+        if count_vector.sum() < even_sampling_depth:
+            continue
+        else:
+            sample_ids.append(e)
+            data.append(subsample_counts(count_vector.astype(int), even_sampling_depth))
+    return pd.DataFrame(data, index=sample_ids, columns=biom.columns)
+
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,
