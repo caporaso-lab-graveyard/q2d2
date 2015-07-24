@@ -13,6 +13,8 @@ import glob
 import marisa_trie
 import numpy as np
 import pandas as pd
+from IPython.html.widgets import interactive, fixed, IntSlider
+from IPython.display import display
 
 import skbio
 from skbio.diversity.beta import pw_distances
@@ -128,17 +130,30 @@ def get_index_markdown(analysis_root):
     result = index_md_template.format(toc)
     return result
 
-def even_sampling_depth_summary(sampling_depth, biom):
-    counts = biom.T.sum()
-    samples_retained = (counts >= sampling_depth)
+def summarize_sampling_depth(even_sampling_depth, counts):
+    samples_retained = (counts >= even_sampling_depth)
     num_samples_retained = samples_retained.sum()
-    num_sequences_retained = num_samples_retained * sampling_depth
-    percent_samples_retained = num_samples_retained * 100 / len(counts)
-    percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
-    out_s = ("Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
-             "{3} ({4:.2f}%) of the sequences.")
-    print(out_s.format(sampling_depth, num_samples_retained, percent_samples_retained,
-                       num_sequences_retained, percent_sequences_retained))
+    num_sequences_retained = num_samples_retained * even_sampling_depth
+    return samples_retained, num_samples_retained, num_sequences_retained
+
+def explore_sampling_depth(biom):
+    counts = biom.T.sum()
+    count_summary = biom.T.sum().describe()
+    sampling_depth_slider = IntSlider(min=count_summary['min'],
+                                  max=count_summary['max'],
+                                  value=count_summary['50%'])
+    def f(even_sampling_depth):
+        samples_retained, num_samples_retained, num_sequences_retained = \
+            summarize_sampling_depth(even_sampling_depth, counts)
+        percent_samples_retained = num_samples_retained * 100 / len(counts)
+        percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
+        out_s = ("Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
+                 "{3} ({4:.2f}%) of the sequences.")
+        print(out_s.format(even_sampling_depth, num_samples_retained,
+                           percent_samples_retained, num_sequences_retained,
+                           percent_sequences_retained))
+    w = interactive(f, even_sampling_depth=sampling_depth_slider)
+    display(w)
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,
