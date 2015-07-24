@@ -33,7 +33,7 @@ def _prep_files(analysis_root, output_fn, remove_existing=False):
 def seqs_to_biom(analysis_root, sequences_filepath):
     os.makedirs(analysis_root, exist_ok=True)
     output_fn = _prep_files(analysis_root, '0.seqs-to-biom.md')
-    markdown_s = markdown_templates['seqs-to-biom'](sequences_filepath, "exact", "dummy-command", analysis_root)
+    markdown_s = markdown_templates['seqs-to-biom'](sequences_filepath, "exact", " ".join(argv), analysis_root)
     open(output_fn, 'w').write(markdown_s)
 
 @cli.command()
@@ -45,7 +45,7 @@ def seqs_to_biom(analysis_root, sequences_filepath):
 def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
     os.makedirs(analysis_root, exist_ok=True)
     output_fn = _prep_files(analysis_root, '1.biom-to-pcoa.md')
-    markdown_s = markdown_templates['biom-to-pcoa'](metadata_filepath, color_by, "dummy-command", analysis_root)
+    markdown_s = markdown_templates['biom-to-pcoa'](metadata_filepath, color_by, " ".join(argv), analysis_root)
     open(output_fn, 'w').write(markdown_s)
 
 @cli.command()

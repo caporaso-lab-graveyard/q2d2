@@ -15,3 +15,10 @@ is described in detail in [IAB's *Studying Biological Diversity*](http://readiab
 >>> from q2d2 import pcoa_from_biom
 >>> pcoa_from_biom(table, sample_md, '{1}')
 ```
+
+Summary of what you did to prepare this analysis.
+```
+q2d2 version: {2}
+map filepath: {5}
+command: {4}
+```

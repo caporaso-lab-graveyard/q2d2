@@ -119,13 +119,13 @@ def get_markdown_template(fn):
 def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
     shutil.copy(seqs_fp, os.path.join(output_fp, '.seqs'))
     seqs_to_biom_md_template = get_markdown_template('seqs-to-biom.md')
-    result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command)
+    result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command, seqs_fp)
     return result
 
 def get_biom_to_pcoa_markdown(map_fp, color_by, command, output_fp):
     shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
     biom_to_pcoa_md_template = get_markdown_template('biom-to-pcoa.md')
-    result = biom_to_pcoa_md_template.format('.sample-md', color_by, __version__, "dummy-md5", command)
+    result = biom_to_pcoa_md_template.format('.sample-md', color_by, __version__, "dummy-md5", command, map_fp)
     return result
 
 def get_index_markdown(analysis_root):

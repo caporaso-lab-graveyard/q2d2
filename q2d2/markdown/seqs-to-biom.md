@@ -1,13 +1,5 @@
 # Construction of a BIOM table.
 
-Summary of what you did to prepare this analysis.
-```
-q2d2 version: {2}
-input filepath: {0}
-input filepath md5: {3}
-command: {4}
-```
-
 In this first step, we'll construct the [Trie](https://en.wikipedia.org/wiki/Trie)
 data structure, which is used for grouping sequences into OTUs.
 
@@ -64,4 +56,12 @@ Finally, we'll store the table so we can use it again another time.
 >>> from q2d2 import store_table, store_rarified_table
 >>> store_table(biom)
 >>> store_rarified_table(rarified_biom)
+```
+
+Summary of what you did to prepare this analysis.
+```
+q2d2 version: {2}
+input filepath: {5}
+input filepath md5: {3}
+command: {4}
 ```
