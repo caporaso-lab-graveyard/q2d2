@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 from IPython.html.widgets import interactive, fixed, IntSlider
 from IPython.display import display
+from scipy.optimize import minimize_scalar
 
 import skbio
 from skbio.diversity.beta import pw_distances
@@ -130,28 +131,41 @@ def get_index_markdown(analysis_root):
     result = index_md_template.format(toc)
     return result
 
-def summarize_sampling_depth(even_sampling_depth, counts):
+def _summarize_even_sampling_depth(even_sampling_depth, counts):
     samples_retained = (counts >= even_sampling_depth)
     num_samples_retained = samples_retained.sum()
     num_sequences_retained = num_samples_retained * even_sampling_depth
     return samples_retained, num_samples_retained, num_sequences_retained
 
+def _get_depth_for_max_sequence_count(counts):
+    """Find the even sampling depth that retains the most sequences."""
+    count_summary = counts.describe()
+    def f(d):
+        return -1 * _summarize_even_sampling_depth(d, counts)[2]
+
+    res = minimize_scalar(f,
+                          bounds=(count_summary['min'], count_summary['max']),
+                          method='bounded')
+    return np.floor(res.x)
+
 def explore_sampling_depth(biom):
     counts = biom.T.sum()
-    count_summary = biom.T.sum().describe()
+    count_summary = counts.describe()
+    depth_for_max_sequence_count = _get_depth_for_max_sequence_count(counts)
     sampling_depth_slider = IntSlider(min=count_summary['min'],
-                                  max=count_summary['max'],
-                                  value=count_summary['50%'])
+                                      max=count_summary['max'],
+                                      value=depth_for_max_sequence_count)
     def f(even_sampling_depth):
         samples_retained, num_samples_retained, num_sequences_retained = \
-            summarize_sampling_depth(even_sampling_depth, counts)
+            _summarize_even_sampling_depth(even_sampling_depth, counts)
         percent_samples_retained = num_samples_retained * 100 / len(counts)
         percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
         out_s = ("Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
-                 "{3} ({4:.2f}%) of the sequences.")
+                 "{3} ({4:.2f}%) of the sequences.\nSampling depth of {5} will retain "
+                 "the largest number of sequences.")
         print(out_s.format(even_sampling_depth, num_samples_retained,
                            percent_samples_retained, num_sequences_retained,
-                           percent_sequences_retained))
+                           percent_sequences_retained, depth_for_max_sequence_count))
     w = interactive(f, even_sampling_depth=sampling_depth_slider)
     display(w)
 
