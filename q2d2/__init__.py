@@ -13,7 +13,6 @@ import glob
 import marisa_trie
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from IPython.html.widgets import interactive, fixed, IntSlider
 from IPython.display import display
 from scipy.optimize import minimize_scalar
@@ -92,6 +91,7 @@ def pcoa_from_biom(biom, sample_md, color_by):
                           title=title,
                           s=35)
 
+
 def table_summary(df):
     print("Samples: ", len(df.index))
     print("Observations: ", len(df.columns))
@@ -162,6 +162,7 @@ def get_default_even_sampling_depth(biom):
     return _get_depth_for_max_sequence_count(counts)
 
 def explore_sampling_depth(biom):
+    import seaborn as sns
     counts = biom.T.sum()
     count_summary = counts.describe()
     total_num_samples = len(counts)

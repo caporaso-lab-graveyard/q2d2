@@ -58,10 +58,10 @@ Next, we'll rarify the table to an even number of sequences per sample. If you w
 >>> print("Rarified table to", even_sampling_depth, "sequences per sample.")
 ```
 
+Finally, we'll store the table so we can use it again another time.
+
 ```python
 >>> from q2d2 import store_table, store_rarified_table
 >>> store_table(biom)
->>> store_rarified_table(biom)
+>>> store_rarified_table(rarified_biom)
 ```
-
-Finally, we'll store the table so we can use it again another time.
