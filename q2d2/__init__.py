@@ -146,7 +146,7 @@ def _get_depth_for_max_sequence_count(counts):
     res = minimize_scalar(f,
                           bounds=(count_summary['min'], count_summary['max']),
                           method='bounded')
-    return np.floor(res.x)
+    return int(np.floor(res.x))
 
 def explore_sampling_depth(biom):
     counts = biom.T.sum()
@@ -160,9 +160,9 @@ def explore_sampling_depth(biom):
             _summarize_even_sampling_depth(even_sampling_depth, counts)
         percent_samples_retained = num_samples_retained * 100 / len(counts)
         percent_sequences_retained = num_sequences_retained * 100 / counts.sum()
-        out_s = ("Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
-                 "{3} ({4:.2f}%) of the sequences.\nSampling depth of {5} will retain "
-                 "the largest number of sequences.")
+        out_s = ("Sampling depth of {5} will retain the largest number of sequences.\n"
+                 "Sampling depth of {0} will retain {1} ({2:.2f}%) of the samples and "
+                 "{3} ({4:.2f}%) of the sequences.")
         print(out_s.format(even_sampling_depth, num_samples_retained,
                            percent_samples_retained, num_sequences_retained,
                            percent_sequences_retained, depth_for_max_sequence_count))

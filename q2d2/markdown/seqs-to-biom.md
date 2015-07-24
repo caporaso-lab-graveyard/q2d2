@@ -36,7 +36,7 @@ Then, we'll get summary statistics on our table.
 >>> table_summary(biom)
 ```
 
-We can use an interactive widget to choose an even sampling depth, which will be important for analyses that require rarefaction.
+We can next explore how choosing an even sampling depth (important for analyses that require rarefaction, such as computing community richness or between-sample distances) will affect the number of sequences as samples that are included in those analyses. In the Jupyter Notebook, this analysis will be interactive. 
 
 ```python
 >>> from q2d2 import explore_sampling_depth
