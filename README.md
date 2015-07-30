@@ -3,11 +3,12 @@
 ## Installation (conda-based)
 
 ```bash
-conda create -n q2d2 python=3.4
+conda create -n q2d2 python=3.4 scikit-bio
 source activate q2d2
-conda install --file ~/code/scikit-bio/ci/conda_requirements.txt
 pip install -e ~/code/q2d2
 ```
+
+Then, follow *Step 3* of the [ipymd install instructions](https://github.com/rossant/ipymd/blob/master/README.md).
 
 ## Usage
 
