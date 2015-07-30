@@ -12,13 +12,7 @@ pip install -e ~/code/q2d2
 ## Usage
 
 ```bash
-q2d2 seqs_to_biom --sequences-filepath /Users/caporaso/code/q2d2/example-data/keyboard/forensic-seqs.fna --analysis-root forensic-test
+q2d2 seqs_to_biom --sequences-filepath /Users/caporaso/code/q2d2/example-data/keyboard/forensic-seqs.fna --analysis-root my-analysis
+q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath example-data/keyboard/forensic-map.txt --color-by Subject
+q2d2 start_server --analysis-root my-analysis
 ```
-
-Execute the Jupyter notebook that is opened.
-
-```bash
-q2d2 biom_to_pcoa --analysis-root example-analysis --metadata-filepath example-data/keyboard/forensic-map.txt --color-by Subject
-```
-
-Execute the Jupyter notebook that is opened.
