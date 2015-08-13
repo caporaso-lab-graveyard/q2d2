@@ -3,22 +3,21 @@
 ## Installation (conda-based)
 
 ```bash
-conda create -n q2d2 python=3.4
+conda create -n q2d2 python=3.4 scikit-bio ipython-notebook
 source activate q2d2
-conda install --file ~/code/scikit-bio/ci/conda_requirements.txt
-pip install -e ~/code/q2d2
+git clone https://github.com/gregcaporaso/q2d2.git
+cd q2d2
+pip install -e .
 ```
 
 ## Usage
 
-```bash
-q2d2 seqs_to_biom --sequences-filepath /Users/caporaso/code/q2d2/example-data/keyboard/forensic-seqs.fna --analysis-root forensic-test
-```
-
-Execute the Jupyter notebook that is opened.
+Run the following commands to generate analysis notebooks:
 
 ```bash
-q2d2 biom_to_pcoa --analysis-root example-analysis --metadata-filepath example-data/keyboard/forensic-map.txt --color-by Subject
+q2d2 seqs_to_biom --sequences-filepath example-data/keyboard/forensic-seqs.fna --analysis-root my-analysis
+q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath example-data/keyboard/forensic-map.txt --color-by Subject
+q2d2 start_server --analysis-root my-analysis
 ```
 
-Execute the Jupyter notebook that is opened.
+Follow the instructions from the previous command to interact with the analysis notebooks.
