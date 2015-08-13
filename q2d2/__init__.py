@@ -130,6 +130,14 @@ def get_biom_to_pcoa_markdown(map_fp, color_by, command, output_fp):
     result = biom_to_pcoa_md_template.format('.sample-md', color_by, __version__, "dummy-md5", command, map_fp)
     return result
 
+def get_biom_to_adiv_markdown(map_fp, collated_alpha_fp, command, output_fp):
+    shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
+    #shutil.copy(collated_alpha_fp, os.path.join(output_fp, '.collated-alpha'))
+    md_template = get_markdown_template('biom-to-adiv.md')
+    print(collated_alpha_fp)
+    result = md_template.format('.sample-md', collated_alpha_fp, __version__, "dummy-md5", command, map_fp)
+    return result
+
 def get_index_markdown(analysis_root):
     index_md_template = get_markdown_template('index.md')
     md_fps = glob.glob(os.path.join(analysis_root, '*.md'))
@@ -227,4 +235,5 @@ def rarify(biom, even_sampling_depth):
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,
+                      'biom-to-adiv': get_biom_to_adiv_markdown,
                       'index': get_index_markdown}
