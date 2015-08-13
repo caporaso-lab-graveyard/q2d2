@@ -132,10 +132,17 @@ def get_biom_to_pcoa_markdown(map_fp, color_by, command, output_fp):
 
 def get_biom_to_adiv_markdown(map_fp, collated_alpha_fp, command, output_fp):
     shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
-    #shutil.copy(collated_alpha_fp, os.path.join(output_fp, '.collated-alpha'))
+    shutil.copy(collated_alpha_fp, os.path.join(output_fp, '.collated-alpha'))
     md_template = get_markdown_template('biom-to-adiv.md')
-    print(collated_alpha_fp)
     result = md_template.format('.sample-md', collated_alpha_fp, __version__, "dummy-md5", command, map_fp)
+    return result
+
+def get_biom_to_taxa_plots_markdown(map_fp, otu_table_fp, taxa_md_fp, command, output_fp):
+    shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
+    shutil.copy(taxa_md_fp, os.path.join(output_fp, '.otu-md'))
+    shutil.copy(otu_table_fp, os.path.join(output_fp, '.tmp-biom'))
+    md_template = get_markdown_template('biom-to-taxa-plots.md')
+    result = md_template.format('.sample-md', otu_table_fp, taxa_md_fp, __version__, "dummy-md5", command, map_fp)
     return result
 
 def get_index_markdown(analysis_root):
@@ -236,4 +243,5 @@ def rarify(biom, even_sampling_depth):
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,
                       'biom-to-adiv': get_biom_to_adiv_markdown,
+                      'biom-to-taxa-plots': get_biom_to_taxa_plots_markdown,
                       'index': get_index_markdown}

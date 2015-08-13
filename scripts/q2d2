@@ -55,10 +55,23 @@ def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
 @click.option('--collated-alpha-filepath', "collated_alpha_filepath",
               help="The collated alpha diversity file.")
 def biom_to_adiv(analysis_root, collated_alpha_filepath, metadata_filepath):
-    print(collated_alpha_filepath)
     os.makedirs(analysis_root, exist_ok=True)
     output_fn = _prep_files(analysis_root, '1.biom-to-adiv.md')
     markdown_s = markdown_templates['biom-to-adiv'](metadata_filepath, collated_alpha_filepath, " ".join(argv), analysis_root)
+    open(output_fn, 'w').write(markdown_s)
+
+@cli.command()
+@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
+@click.option('--metadata-filepath', "metadata_filepath",
+              help="Path to the sample metadata in tsv.")
+@click.option('--otu-metadata-filepath', "otu_metadata_filepath",
+              help="Path to the OTU metadata in tsv.")
+@click.option('--otu-table-filepath', "otu_table_filepath",
+              help="Path to the OTU table in tsv.")
+def biom_to_taxa_plots(analysis_root, otu_metadata_filepath, otu_table_filepath, metadata_filepath):
+    os.makedirs(analysis_root, exist_ok=True)
+    output_fn = _prep_files(analysis_root, '1.biom-to-taxa-plots.md')
+    markdown_s = markdown_templates['biom-to-taxa-plots'](metadata_filepath, otu_table_filepath, otu_metadata_filepath, " ".join(argv), analysis_root)
     open(output_fn, 'w').write(markdown_s)
 
 
