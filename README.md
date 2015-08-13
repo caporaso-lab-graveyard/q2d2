@@ -15,8 +15,8 @@ pip install -e .
 Run the following commands to generate analysis notebooks:
 
 ```bash
-q2d2 seqs_to_biom --sequences-filepath example-data/keyboard/forensic-seqs.fna --analysis-root my-analysis
-q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath example-data/keyboard/forensic-map.txt --color-by Subject
+q2d2 seqs_to_biom --sequences-filepath example-data/keyboard/seqs.fna --analysis-root my-analysis
+q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath example-data/keyboard/sample-md.tsv --color-by Subject
 q2d2 start_server --analysis-root my-analysis
 ```
 
