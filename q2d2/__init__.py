@@ -9,10 +9,12 @@ import hashlib
 import os
 import shutil
 import glob
+import math
 
 import marisa_trie
 import numpy as np
 import pandas as pd
+from IPython.html import widgets
 from IPython.html.widgets import interactive, fixed, IntSlider
 from IPython.display import display
 from scipy.optimize import minimize_scalar
@@ -170,6 +172,7 @@ def explore_sampling_depth(biom):
     depth_for_max_sequence_count = _get_depth_for_max_sequence_count(counts)
     sampling_depth_slider = IntSlider(min=count_summary['min'],
                                       max=count_summary['max'],
+                                      step=10 ** (math.log(count_summary['max'], 10) - 2),
                                       value=depth_for_max_sequence_count)
     default_samples_retained, default_num_samples_retained, default_num_sequences_retained = \
             _summarize_even_sampling_depth(depth_for_max_sequence_count, counts)
@@ -199,9 +202,15 @@ def explore_sampling_depth(biom):
         ax.plot([even_sampling_depth, even_sampling_depth], ax.get_ylim(),
                 'k-', label=line_label)
         ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-        ax
+
+    def reset_depth(_):
+        sampling_depth_slider.value = depth_for_max_sequence_count
+
+    reset = widgets.Button(icon='fa-refresh')
+    reset.on_click(reset_depth)
+
     w = interactive(f, even_sampling_depth=sampling_depth_slider)
-    display(w)
+    display(widgets.HBox(children=[w, reset]))
 
 def rarify(biom, even_sampling_depth):
     data = []
