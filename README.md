@@ -15,8 +15,10 @@ pip install -e .
 Run the following commands to generate analysis notebooks:
 
 ```bash
-q2d2 seqs_to_biom --sequences-filepath example-data/keyboard/seqs.fna --analysis-root my-analysis
-q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath example-data/keyboard/sample-md.tsv --color-by Subject
+q2d2 seqs_to_biom --sequences-filepath $PWD/example-data/keyboard/seqs.fna --analysis-root my-analysis
+q2d2 biom_to_pcoa --analysis-root my-analysis --metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --color-by Subject
+q2d2 biom_to_adiv --analysis-root my-analysis --metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --collated-alpha-filepath $PWD/example-data/keyboard/q191/faith-pd-collated.tsv
+q2d2 biom_to_taxa_plots --analysis-root my-analysis --metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --otu-metadata-filepath $PWD/example-data/keyboard/q191/otu-md.tsv --otu-table-filepath $PWD/example-data/keyboard/q191/otu-table.tsv
 q2d2 start_server --analysis-root my-analysis
 ```
 

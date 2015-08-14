@@ -11,9 +11,11 @@ import shutil
 import glob
 import math
 
+import itertools
 import marisa_trie
 import numpy as np
 import pandas as pd
+
 from IPython.html import widgets
 from IPython.html.widgets import interactive, fixed, IntSlider
 from IPython.display import display
@@ -23,6 +25,8 @@ import skbio
 from skbio.diversity.beta import pw_distances
 from skbio.stats.ordination import PCoA
 from skbio.stats import subsample_counts
+
+from q2d2.wui import metadata_controls
 
 def exact(trie, seq):
     return [(trie[str(seq)], 1.)]
@@ -81,11 +85,11 @@ def biom_from_trie(trie, sids, seq_iter, count_f=exact):
     result.drop([i for i,e in enumerate(result.sum()) if e == 0], axis=1, inplace=True)
     return result
 
-def pcoa_from_biom(biom, sample_md, color_by):
+def pcoa_from_biom(biom, sample_md, color_by, metric):
 
     title = "Samples colored by %s." % color_by
 
-    dm = pw_distances(biom, biom.index)
+    dm = pw_distances(metric=metric, counts=biom, ids=biom.index)
     pcoa_results = PCoA(dm).scores()
     _ = pcoa_results.plot(df=sample_md,
                           column=color_by,
@@ -238,6 +242,52 @@ def rarify(biom, even_sampling_depth):
             sample_ids.append(e)
             data.append(subsample_counts(count_vector.astype(int), even_sampling_depth))
     return pd.DataFrame(data, index=sample_ids, columns=biom.columns)
+
+
+def filter_dm_and_map(dm, map_df):
+    ids_to_exclude = set(dm.ids) - set(map_df.index.values)
+    ids_to_keep = set(dm.ids) - ids_to_exclude
+    filtered_dm = dm.filter(ids_to_keep)
+    filtered_map = map_df.loc[ids_to_keep]
+
+    return filtered_dm, filtered_map
+
+def get_within_between_distances(map_df, dm, col):
+    filtered_dm, filtered_map = filter_dm_and_map(dm, map_df)
+    groups = []
+    distances = []
+    map_dict = filtered_map[col].to_dict()
+    for id_1, id_2 in itertools.combinations(filtered_map.index.tolist(), 2):
+        row = []
+        if map_dict[id_1] == map_dict[id_2]:
+            groups.append('Within')
+        else:
+            groups.append('Between')
+        distances.append(filtered_dm[(id_1, id_2)])
+    groups = zip(groups, distances)
+    distances_df = pd.DataFrame(data=list(groups), columns=['Groups', 'Distance'])
+
+    return distances_df
+
+def distance_histogram(dm, category, metadata, metric='Distance', order=['Within', 'Between']):
+    import seaborn as sns
+    within_bw_distances = get_within_between_distances(metadata, dm, category)
+    ax = sns.violinplot(x='Groups', y='Distance', data=within_bw_distances, order=order, orient='v')
+    ax.set_xlabel(category)
+    ax.set_ylabel(metric)
+
+def interactive_distance_histograms(dm, sample_metadata):
+    def on_update(category, metadata, check_within, check_between):
+        order = []
+        if check_within:
+            order.append('Within')
+        if check_between:
+            order.append('Between')
+        distance_histogram(dm, category, metadata, order=order)
+    check_within = widgets.Checkbox(description='Show within category', value=True)
+    check_between = widgets.Checkbox(description='Show between category', value=True)
+    extras = widgets.VBox(children=[check_within, check_between])
+    return metadata_controls(sample_metadata, on_update, extras)
 
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,

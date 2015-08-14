@@ -1,7 +1,7 @@
 from IPython.html import widgets
 from IPython.display import clear_output
 import pandas as pd
-import seaborn as sns
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -97,6 +97,7 @@ def merge_metadata_alpha_div(metadata, alpha_div):
     return pd.concat([metadata, alpha_div], axis=1)
 
 def plot_alpha(metadata, category, hue, depth=None):
+    import seaborn as sns
     with plt.rc_context(dict(sns.axes_style("darkgrid"),
                              **sns.plotting_context("notebook", font_scale=2))):
         width = len(metadata[category].unique())
@@ -123,13 +124,6 @@ def interactive_plot_alpha_diversity(metadata, alpha_diversity):
 
     return metadata_controls(metadata, on_update, extras)
 
-
-
-
-
-
-
-
 ###########Functions for the taxa sumamry plots#####################
 
 def get_taxa_counts(metadata_df, otu_df, category):
@@ -151,6 +145,7 @@ def normalize(df):
 #plotting functions
 
 def plot_stacked_bar(df):
+    import seaborn as sns
     with plt.rc_context(dict(sns.axes_style("darkgrid"),
                          **sns.plotting_context("notebook", font_scale=1.8))):
         f, ax = plt.subplots(1, figsize=(10, 10))
