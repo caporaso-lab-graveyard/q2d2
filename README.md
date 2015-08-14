@@ -22,4 +22,4 @@ q2d2 biom_to_taxa_plots --analysis-root my-analysis --metadata-filepath $PWD/exa
 q2d2 start_server --analysis-root my-analysis
 ```
 
-Follow the instructions from the previous command to interact with the analysis notebooks.
+Follow the instructions that are printed by the final command to interact with the analysis notebooks.
