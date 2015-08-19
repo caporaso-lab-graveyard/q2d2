@@ -1,5 +1,7 @@
 # q2d2: QIIME 2 is documentation-driven (a public prototype) 
 
+This repository is a publicly accessible prototype of some ideas that we're exploring for QIIME 2. **This repository is not QIIME 2 - that doesn't exist yet.** The code in this repository is untested and highly experimental. You should not use this for any real analysis, only for exploring the documentation-driven interface.
+
 ## Installation (conda-based)
 
 ```bash
