@@ -1,4 +1,4 @@
-
+# q2d2: QIIME 2 is documentation-driven (a public prototype) 
 
 ## Installation (conda-based)
 
