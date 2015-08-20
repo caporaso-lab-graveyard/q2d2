@@ -4,7 +4,8 @@ __version__ = "0.0.0-dev"
 
 import random
 import io
-from collections import defaultdict
+import itertools
+from collections import defaultdict, namedtuple
 import hashlib
 import os
 import shutil
@@ -12,7 +13,6 @@ import glob
 import math
 from functools import partial
 
-import itertools
 import marisa_trie
 import numpy as np
 import pandas as pd
@@ -29,6 +29,27 @@ from skbio.stats.ordination import PCoA
 from skbio.stats import subsample_counts
 
 from q2d2.wui import metadata_controls
+
+WorkflowCategory = namedtuple('WorkflowCategory', ['name', 'title', 'workflows'])
+Workflow = namedtuple('Workflow', ['name', 'title', 'inputs'])
+
+workflows = [
+    WorkflowCategory('no-biom', 'No BIOM table', []),
+    WorkflowCategory('raw-biom', 'Raw (unnormalized) BIOM table', [
+        Workflow('rarefy-biom', 'Rarefy BIOM table', ['unrarefied_biom']),
+        Workflow('biom-to-taxa-plots', 'Taxonomy plots',
+                 ['unrarefied_biom', 'sample_metadata', 'otu_metadata']),
+    ]),
+    WorkflowCategory('normalized-biom', 'Normalized BIOM table', [
+        Workflow('biom-to-adiv', 'Alpha diversity', ['rarefied_biom', 'sample_metadata']),
+        Workflow('biom-to-bdiv', 'Beta diversity', ['rarefied_biom', 'sample_metadata']),
+    ])
+]
+
+def create_index(study_name, command):
+    markdown_s = get_index_markdown(study_name, command)
+    output_filepath = os.path.join(study_name, 'index.md')
+    open(output_filepath, 'w').write(markdown_s)
 
 def exact(trie, seq):
     return [(trie[str(seq)], 1.)]

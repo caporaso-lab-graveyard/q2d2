@@ -1,4 +1,4 @@
-# [q2d2](https://github.com/gregcaporaso/q2d2) microbiome analysis for study {1}
+# [q2d2](https://github.com/gregcaporaso/q2d2) microbiome analysis for study **{1}**
 
 **q2d2 IS AN UNTESTED PROTOTYPE!** You should absolutely not use this system for production analysis.
 

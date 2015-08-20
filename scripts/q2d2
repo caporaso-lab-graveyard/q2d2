@@ -5,7 +5,8 @@ import os.path
 import subprocess
 import click
 
-from q2d2 import (create_input_files, write_job, get_index_markdown)
+from q2d2 import (create_input_files, write_job, get_index_markdown, workflows,
+                  create_index)
 
 @click.group()
 def cli():
@@ -32,15 +33,12 @@ def create_study(study_name, sample_metadata_filepath,
                        otu_metadata=otu_metadata_filepath,
                        unrarefied_biom=unrarefied_biom_filepath,
                        tree=tree_filepath)
-    workflow_names = ['rarefy-biom', 'biom-to-taxa-plots', 'biom-to-pcoa',
-                      'biom-to-adiv']
-    for workflow_name in workflow_names:
-        write_job(workflow_name=workflow_name, study_name=study_name)
+    for workflow_category in workflows:
+        for workflow in workflow_category.workflows:
+            write_job(workflow_name=workflow.name, study_name=study_name)
 
-    #write_index()
-    markdown_s = get_index_markdown(study_name, " ".join(argv))
-    output_filepath = os.path.join(study_name, 'index.md')
-    open(output_filepath, 'w').write(markdown_s)
+    create_index(study_name, " ".join(argv))
+
     command = ' '.join(['ipython', 'notebook', os.path.join(study_name, 'index.md')])
     print("", "Run the following to start the Jupyter analysis environment:", command, "", sep='\n')
 
