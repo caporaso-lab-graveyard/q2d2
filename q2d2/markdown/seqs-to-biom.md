@@ -34,11 +34,3 @@ Finally, we'll store the table so we can use it again another time.
 >>> from q2d2 import store_table
 >>> store_table(biom)
 ```
-
-Summary of what you did to prepare this analysis.
-```
-q2d2 version: {2}
-input filepath: {5}
-input filepath md5: {3}
-command: {4}
-```

@@ -5,15 +5,15 @@ import os.path
 import subprocess
 import click
 
-from q2d2 import markdown_templates
+from q2d2 import markdown_templates, create_input_files
 
 @click.group()
 def cli():
     pass
 
-def _prep_files(analysis_root, output_fn, remove_existing=False):
-    os.makedirs(analysis_root, exist_ok=True)
-    result = os.path.join(analysis_root, output_fn)
+def _prep_files(study_name, output_fn, remove_existing=False):
+    os.makedirs(study_name, exist_ok=True)
+    result = os.path.join(study_name, output_fn)
 
     if os.path.exists(result):
         if remove_existing:
@@ -24,72 +24,48 @@ def _prep_files(analysis_root, output_fn, remove_existing=False):
             exit(1)
     return result
 
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-@click.option('--sequences-filepath', "sequences_filepath", help="Path to the sequences in fasta, "
-                                           "fastq, fasta.gz, fastq.gz... "
-                                           "Actually... just pass the "
-                                           "file, we'll figure out what it is.")
-def seqs_to_biom(analysis_root, sequences_filepath):
-    os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '0.seqs-to-biom.md')
-    markdown_s = markdown_templates['seqs-to-biom'](sequences_filepath, "exact", " ".join(argv), analysis_root)
-    open(output_fn, 'w').write(markdown_s)
-
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-@click.option('--metadata-filepath', "metadata_filepath",
-              help="Path to the sample metadata in tsv.")
-@click.option('--color-by', "color_by",
-              help="Metadata category to color samples by in PCoA.")
-def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
-    os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '2.biom-to-pcoa.md')
-    markdown_s = markdown_templates['biom-to-pcoa'](metadata_filepath, color_by, " ".join(argv), analysis_root)
-    open(output_fn, 'w').write(markdown_s)
-
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-@click.option('--metadata-filepath', "metadata_filepath",
-              help="Path to the sample metadata in tsv.")
-@click.option('--collated-alpha-filepath', "collated_alpha_filepath",
-              help="The collated alpha diversity file.")
-def biom_to_adiv(analysis_root, collated_alpha_filepath, metadata_filepath):
-    os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '2.biom-to-adiv.md')
-    markdown_s = markdown_templates['biom-to-adiv'](metadata_filepath, collated_alpha_filepath, " ".join(argv), analysis_root)
-    open(output_fn, 'w').write(markdown_s)
-
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-def rarefy_biom(analysis_root):
-    os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '1.rarefy-biom.md')
-    markdown_s = markdown_templates['rarefy-biom'](" ".join(argv), analysis_root)
-    open(output_fn, 'w').write(markdown_s)
-
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-@click.option('--metadata-filepath', "metadata_filepath",
+@cli.command('create-study')
+@click.option('--study-name', "study_name",
+              help="Descriptive name for your study.")
+@click.option('--sample-metadata-filepath', "sample_metadata_filepath",
               help="Path to the sample metadata in tsv.")
 @click.option('--otu-metadata-filepath', "otu_metadata_filepath",
               help="Path to the OTU metadata in tsv.")
-@click.option('--otu-table-filepath', "otu_table_filepath",
-              help="Path to the OTU table in tsv.")
-def biom_to_taxa_plots(analysis_root, otu_metadata_filepath, otu_table_filepath, metadata_filepath):
-    os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '1.biom-to-taxa-plots.md')
-    markdown_s = markdown_templates['biom-to-taxa-plots'](metadata_filepath, otu_table_filepath, otu_metadata_filepath, " ".join(argv), analysis_root)
+@click.option('--unrarefied-biom-filepath', "unrarefied_biom_filepath",
+              help="Path to the unrarefied BIOM table in classic (tsv) format.")
+@click.option('--tree-filepath', "tree_filepath",
+              help="Path to the phylogenetic tree in newick format.")
+def create_study(study_name, sample_metadata_filepath,
+                 otu_metadata_filepath, unrarefied_biom_filepath,
+                 tree_filepath):
+
+    os.makedirs(study_name, exist_ok=False)
+    create_input_files(study_name,
+                       sample_metadata=sample_metadata_filepath,
+                       otu_metadata=otu_metadata_filepath,
+                       unrarefied_biom=unrarefied_biom_filepath,
+                       tree=tree_filepath)
+
+    output_fn = _prep_files(study_name, '1.rarefy-biom.md')
+    markdown_s = markdown_templates['rarefy-biom']()
     open(output_fn, 'w').write(markdown_s)
 
-
-@cli.command()
-@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
-def start_server(analysis_root):
-    markdown_s = markdown_templates['index'](analysis_root)
-    output_fn = _prep_files(analysis_root, 'index.md', remove_existing=True)
+    output_fn = _prep_files(study_name, '1.biom-to-taxa-plots.md')
+    markdown_s = markdown_templates['biom-to-taxa-plots']()
     open(output_fn, 'w').write(markdown_s)
-    command = ' '.join(['ipython', 'notebook', os.path.join(analysis_root, 'index.md')])
+
+    output_fn = _prep_files(study_name, '2.biom-to-pcoa.md')
+    markdown_s = markdown_templates['biom-to-pcoa']()
+    open(output_fn, 'w').write(markdown_s)
+
+    output_fn = _prep_files(study_name, '2.biom-to-adiv.md')
+    markdown_s = markdown_templates['biom-to-adiv']()
+    open(output_fn, 'w').write(markdown_s)
+
+    markdown_s = markdown_templates['index'](study_name, " ".join(argv))
+    output_fn = _prep_files(study_name, 'index.md', remove_existing=True)
+    open(output_fn, 'w').write(markdown_s)
+    command = ' '.join(['ipython', 'notebook', os.path.join(study_name, 'index.md')])
     print("", "Run the following to start the Jupyter analysis environment:", command, "", sep='\n')
 
 if __name__ == "__main__":

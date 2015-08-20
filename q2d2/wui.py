@@ -184,7 +184,7 @@ def interactive_plot_taxa_summary(metadata, otu_df, taxa_df, min_percent=1):
     metadata = metadata.loc[shared_sample_ids, ]
     otu_df = otu_df[list(shared_sample_ids)]
     for index, level in enumerate(['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus']):
-        taxa_df[level] = taxa_df['Species'].apply(lambda x: ' '.join(x.split(' ')[:index + 1]))
+        taxa_df[level] = taxa_df['taxonomy'].apply(lambda x: ' '.join(x.split(' ')[:index + 1]))
     def on_update(category, metadata, level):
 
         plot_taxa_summary(otu_df, metadata, taxa_df, category, level, min_percent=min_percent)

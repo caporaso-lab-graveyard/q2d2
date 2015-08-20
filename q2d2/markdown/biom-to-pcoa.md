@@ -2,10 +2,11 @@ First, we'll load the table and the sample metadata.
 
 ```python
 >>> import pandas as pd
->>> sample_md = pd.read_csv('{0}', sep='\t', index_col=0)
+>>> from q2d2 import load_sample_metadata
+>>> sample_md = load_sample_metadata()
 >>> from q2d2 import load_rarefied_table
 >>> metric = 'braycurtis'
->>> category = '{1}'
+>>> category = 'Subject'
 >>> table = load_rarefied_table()
 ```
 
@@ -31,11 +32,4 @@ Now we'll visually explore the distance distributions themselves.
 ```python
 >>> from q2d2 import interactive_distance_histograms
 >>> interactive_distance_histograms(dm, sample_md)
-```
-
-Summary of what you did to prepare this analysis.
-```
-q2d2 version: {2}
-map filepath: {5}
-command: {4}
 ```

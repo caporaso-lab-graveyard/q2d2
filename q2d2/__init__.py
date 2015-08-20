@@ -53,6 +53,48 @@ def all(trie, seq):
 count_fs = {'exact': exact, 'split': split, 'rand': rand, 'last': last,
             'all': all}
 
+
+type_to_study_filepath = {'sample_metadata': '.sample-md',
+                          'otu_metadata': '.otu-md',
+                          'unrarefied_biom': '.biom',
+                          'rarefied_biom': '.rarefied-biom',
+                          'tree': '.tree'}
+
+def create_input_files(study_name, **kwargs):
+    for input_type, input_filepath in kwargs.items():
+        study_filepath = type_to_study_filepath[input_type]
+        study_filepath = os.path.join(study_name, study_filepath)
+        shutil.copy(input_filepath, study_filepath)
+
+def load_table(rarefied=False):
+    if rarefied:
+        table_path = type_to_study_filepath['rarefied_biom']
+    else:
+        table_path = type_to_study_filepath['unrarefied_biom']
+    result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
+    if 'taxonomy' in result:
+        result.drop('taxonomy', axis=1, inplace=True)
+    return result
+
+def store_table(table, rarefied=False):
+    if rarefied:
+        table_path = type_to_study_filepath['rarefied_biom']
+    else:
+        table_path = type_to_study_filepath['unrarefied_biom']
+    with open(table_path, 'w') as table_file:
+        table_file.write('# Constructed by [q2d2](github.com/gregcaporaso/q2d2)\n')
+        table.to_csv(table_file, index_label="#OTU ID", sep='\t')
+
+load_rarefied_table = partial(load_table, rarefied=True)
+store_rarefied_table = partial(store_table, rarefied=True)
+
+def load_sample_metadata():
+    return pd.read_csv(type_to_study_filepath['sample_metadata'], sep='\t', index_col=0)
+
+def load_otu_metadata():
+    return pd.read_csv(type_to_study_filepath['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
+                       index_col=0, usecols=[0, 1], dtype=object)
+
 def build_trie(seq_generator):
     sequence_summary = {'sample_ids': {},
                         'count': 0,
@@ -115,29 +157,6 @@ def table_summary(df):
     print("Sequence/sample count detail:")
     print(df.sum().describe())
 
-def load_table(rarefied=False):
-    if rarefied:
-        table_path = os.path.abspath('.rarified-table.biom')
-    else:
-        table_path = os.path.abspath('.table.biom')
-    result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
-    if 'taxonomy' in result:
-        result.drop('taxonomy', axis=1, inplace=True)
-    return result
-
-def store_table(table, rarefied=False):
-    if rarefied:
-        table_path = os.path.abspath('.rarified-table.biom')
-    else:
-        table_path = os.path.abspath('.table.biom')
-    with open(table_path, 'w') as table_file:
-        table_file.write('# Constructed by [q2d2](github.com/gregcaporaso/q2d2)\n')
-        table.to_csv(table_file, index_label="#OTU ID", sep='\t')
-
-load_rarefied_table = partial(load_table, rarefied=True)
-store_rarefied_table = partial(store_table, rarefied=True)
-
-
 def get_markdown_template(fn):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
     return open(os.path.join(base_dir, "markdown", fn)).read()
@@ -148,42 +167,28 @@ def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
     result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command, seqs_fp)
     return result
 
-def get_biom_to_pcoa_markdown(map_fp, color_by, command, output_fp):
-    shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
-    biom_to_pcoa_md_template = get_markdown_template('biom-to-pcoa.md')
-    result = biom_to_pcoa_md_template.format('.sample-md', color_by, __version__, "dummy-md5", command, map_fp)
-    return result
+def get_biom_to_pcoa_markdown():
+    return get_markdown_template('biom-to-pcoa.md')
 
-def get_biom_to_adiv_markdown(map_fp, collated_alpha_fp, command, output_fp):
-    shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
-    shutil.copy(collated_alpha_fp, os.path.join(output_fp, '.collated-alpha'))
-    md_template = get_markdown_template('biom-to-adiv.md')
-    result = md_template.format('.sample-md', collated_alpha_fp, __version__, "dummy-md5", command, map_fp)
-    return result
+def get_biom_to_adiv_markdown():
+    return get_markdown_template('biom-to-adiv.md')
 
-def get_rarefy_biom_markdown(command, output_fp):
-    md_template = get_markdown_template('rarefy-biom.md')
-    result = md_template.format(__version__, "dummy-md5", command)
-    return result
+def get_rarefy_biom_markdown():
+    return get_markdown_template('rarefy-biom.md')
 
-def get_biom_to_taxa_plots_markdown(map_fp, otu_table_fp, taxa_md_fp, command, output_fp):
-    shutil.copy(map_fp, os.path.join(output_fp, '.sample-md'))
-    shutil.copy(taxa_md_fp, os.path.join(output_fp, '.otu-md'))
-    shutil.copy(otu_table_fp, os.path.join(output_fp, '.tmp-biom'))
-    md_template = get_markdown_template('biom-to-taxa-plots.md')
-    result = md_template.format('.sample-md', otu_table_fp, taxa_md_fp, __version__, "dummy-md5", command, map_fp)
-    return result
+def get_biom_to_taxa_plots_markdown():
+    return get_markdown_template('biom-to-taxa-plots.md')
 
-def get_index_markdown(analysis_root):
+def get_index_markdown(study_name, command):
     index_md_template = get_markdown_template('index.md')
-    md_fps = glob.glob(os.path.join(analysis_root, '*.md'))
+    md_fps = glob.glob(os.path.join(study_name, '*.md'))
     md_fps.sort()
     toc = []
     for md_fp in md_fps:
         md_fn = os.path.split(md_fp)[1]
         toc.append(' * [%s](%s)' % (md_fn.split('.')[1].replace('-', ' ').title(), md_fn))
     toc = '\n'.join(toc)
-    result = index_md_template.format(toc)
+    result = index_md_template.format(toc, study_name, __version__, command)
     return result
 
 def _summarize_even_sampling_depth(even_sampling_depth, counts):
@@ -313,7 +318,6 @@ def interactive_distance_histograms(dm, sample_metadata):
     check_between = widgets.Checkbox(description='Show between category', value=True)
     extras = widgets.VBox(children=[check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
-
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
                       'rarefy-biom': get_rarefy_biom_markdown,

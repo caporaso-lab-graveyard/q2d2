@@ -36,10 +36,3 @@ Finally, we'll store the table so we can use it again another time.
 >>> from q2d2 import store_rarefied_table
 >>> store_rarefied_table(rarefied_biom)
 ```
-
-Summary of what you did to prepare this analysis.
-```
-q2d2 version: {0}
-input filepath md5: {1}
-command: {2}
-```
