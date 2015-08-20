@@ -81,34 +81,25 @@ def get_df_intersection(df1, df2):
     return df1, df2
 
 
-def transform_alpha_div(alpha_div):
-    alpha_div = alpha_div.drop(['Unnamed: 0', 'iteration'], axis=1)
-    alpha_div = pd.DataFrame(alpha_div.T.stack())
-    alpha_div = alpha_div.reset_index()
-    alpha_div.columns = ['SampleID', 'Sequences Per Sample', 'Phylogenetic Diversity']
-    #the next two lines takes the average of the alpha diversity values for a given sample
-    alpha_div = alpha_div.groupby(['SampleID', 'Sequences Per Sample']).mean()
-    alpha_div = alpha_div.reset_index()
-    alpha_div = alpha_div.pivot(index='SampleID', columns='Sequences Per Sample', values='Phylogenetic Diversity')
-    return alpha_div
-
 def merge_metadata_alpha_div(metadata, alpha_div):
     metadata, alpha_div = get_df_intersection(metadata, alpha_div)
-    return pd.concat([metadata, alpha_div], axis=1)
+    #return pd.concat([metadata, alpha_div], axis=1)
+    metadata['Alpha diversity'] = alpha_div
+    return metadata
 
-def plot_alpha(metadata, category, hue, depth=None):
+
+def plot_alpha(metadata, category, hue):
     import seaborn as sns
     with plt.rc_context(dict(sns.axes_style("darkgrid"),
                              **sns.plotting_context("notebook", font_scale=2))):
         width = len(metadata[category].unique())
         plt.figure(figsize=(width*4, 8))
-        sns.boxplot(x=category, y=depth, data=metadata.sort(category), hue=hue, palette='cubehelix')
+        sns.boxplot(x=category, y='Alpha diversity',
+                    data=metadata.sort(category), hue=hue, palette='cubehelix')
 
 def plot_alpha_diversity(metadata, alpha_div, category, hue=None):
-    alpha_div = transform_alpha_div(alpha_div)
-    depth = max(alpha_div.columns)
     metadata_alpha_div = merge_metadata_alpha_div(metadata, alpha_div)
-    plot_alpha(metadata_alpha_div, category, hue, depth)
+    plot_alpha(metadata_alpha_div, category, hue)
 
 def interactive_plot_alpha_diversity(metadata, alpha_diversity):
     def on_update(category, metadata, Hue, check):
@@ -185,9 +176,13 @@ def plot_taxa_summary(otu_table, metadata, taxonomy, category, level='Phylum', m
 
 
 def interactive_plot_taxa_summary(metadata, otu_df, taxa_df, min_percent=1):
-    intersect_ids = set.intersection(set(metadata.index.tolist()), set(otu_df.columns.tolist()))
-    metadata = metadata.loc[intersect_ids, ]
-    otu_df = otu_df[list(intersect_ids)]
+    shared_sample_ids = set.intersection(set(metadata.index.tolist()), set(otu_df.columns.tolist()))
+    shared_otu_ids = set.intersection(set(taxa_df.index.tolist()), set(otu_df.index.tolist()))
+    if len(shared_otu_ids) == 0:
+        raise ValueError("There are no OTU ids in common between your OTU table and your "
+                         "OTU metadata file.")
+    metadata = metadata.loc[shared_sample_ids, ]
+    otu_df = otu_df[list(shared_sample_ids)]
     for index, level in enumerate(['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus']):
         taxa_df[level] = taxa_df['Species'].apply(lambda x: ' '.join(x.split(' ')[:index + 1]))
     def on_update(category, metadata, level):

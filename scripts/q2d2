@@ -44,7 +44,7 @@ def seqs_to_biom(analysis_root, sequences_filepath):
               help="Metadata category to color samples by in PCoA.")
 def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
     os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '1.biom-to-pcoa.md')
+    output_fn = _prep_files(analysis_root, '2.biom-to-pcoa.md')
     markdown_s = markdown_templates['biom-to-pcoa'](metadata_filepath, color_by, " ".join(argv), analysis_root)
     open(output_fn, 'w').write(markdown_s)
 
@@ -56,8 +56,16 @@ def biom_to_pcoa(analysis_root, color_by, metadata_filepath):
               help="The collated alpha diversity file.")
 def biom_to_adiv(analysis_root, collated_alpha_filepath, metadata_filepath):
     os.makedirs(analysis_root, exist_ok=True)
-    output_fn = _prep_files(analysis_root, '1.biom-to-adiv.md')
+    output_fn = _prep_files(analysis_root, '2.biom-to-adiv.md')
     markdown_s = markdown_templates['biom-to-adiv'](metadata_filepath, collated_alpha_filepath, " ".join(argv), analysis_root)
+    open(output_fn, 'w').write(markdown_s)
+
+@cli.command()
+@click.option('--analysis-root', "analysis_root", help="The analysis home directory.")
+def rarefy_biom(analysis_root):
+    os.makedirs(analysis_root, exist_ok=True)
+    output_fn = _prep_files(analysis_root, '1.rarefy-biom.md')
+    markdown_s = markdown_templates['rarefy-biom'](" ".join(argv), analysis_root)
     open(output_fn, 'w').write(markdown_s)
 
 @cli.command()

@@ -10,6 +10,7 @@ import os
 import shutil
 import glob
 import math
+from functools import partial
 
 import itertools
 import marisa_trie
@@ -23,6 +24,7 @@ from scipy.optimize import minimize_scalar
 
 import skbio
 from skbio.diversity.beta import pw_distances
+import skbio.diversity.alpha
 from skbio.stats.ordination import PCoA
 from skbio.stats import subsample_counts
 
@@ -83,40 +85,58 @@ def biom_from_trie(trie, sids, seq_iter, count_f=exact):
             result[oid][sid] += count
     # this requires two passes, there must be a better way to drop columns with zero count in place
     result.drop([i for i,e in enumerate(result.sum()) if e == 0], axis=1, inplace=True)
-    return result
+    return result.T
 
-def pcoa_from_biom(biom, sample_md, color_by, metric):
 
-    title = "Samples colored by %s." % color_by
 
-    dm = pw_distances(metric=metric, counts=biom, ids=biom.index)
+def biom_to_adiv(metric, biom):
+    metric_f = getattr(skbio.diversity.alpha, metric)
+    results = []
+    for e in biom.columns:
+        results.append(metric_f(biom[e]))
+    return pd.Series(results, index=biom.columns)
+
+def biom_to_dm(metric, biom):
+    return pw_distances(metric=metric, counts=biom.T, ids=biom.columns)
+
+def dm_to_pcoa(dm, sample_md, category):
+    title = "Samples colored by %s." % category
     pcoa_results = PCoA(dm).scores()
     _ = pcoa_results.plot(df=sample_md,
-                          column=color_by,
+                          column=category,
                           axis_labels=['PC 1', 'PC 2', 'PC 3'],
                           title=title,
                           s=35)
 
 
 def table_summary(df):
-    print("Samples: ", len(df.index))
-    print("Observations: ", len(df.columns))
+    print("Samples: ", len(df.columns))
+    print("Observations: ", len(df.index))
     print("Sequence/sample count detail:")
-    print(df.T.sum().describe())
+    print(df.sum().describe())
 
-def load_table():
-    return pd.DataFrame.from_csv('.table.biom')
+def load_table(rarefied=False):
+    if rarefied:
+        table_path = os.path.abspath('.rarified-table.biom')
+    else:
+        table_path = os.path.abspath('.table.biom')
+    result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
+    if 'taxonomy' in result:
+        result.drop('taxonomy', axis=1, inplace=True)
+    return result
 
-def store_table(table):
-    table_path = os.path.abspath('.table.biom')
-    return table.to_csv(table_path)
+def store_table(table, rarefied=False):
+    if rarefied:
+        table_path = os.path.abspath('.rarified-table.biom')
+    else:
+        table_path = os.path.abspath('.table.biom')
+    with open(table_path, 'w') as table_file:
+        table_file.write('# Constructed by [q2d2](github.com/gregcaporaso/q2d2)\n')
+        table.to_csv(table_file, index_label="#OTU ID", sep='\t')
 
-def load_rarified_table():
-    return pd.DataFrame.from_csv('.rarified-table.biom')
+load_rarefied_table = partial(load_table, rarefied=True)
+store_rarefied_table = partial(store_table, rarefied=True)
 
-def store_rarified_table(table):
-    table_path = os.path.abspath('.rarified-table.biom')
-    return table.to_csv(table_path)
 
 def get_markdown_template(fn):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
@@ -139,6 +159,11 @@ def get_biom_to_adiv_markdown(map_fp, collated_alpha_fp, command, output_fp):
     shutil.copy(collated_alpha_fp, os.path.join(output_fp, '.collated-alpha'))
     md_template = get_markdown_template('biom-to-adiv.md')
     result = md_template.format('.sample-md', collated_alpha_fp, __version__, "dummy-md5", command, map_fp)
+    return result
+
+def get_rarefy_biom_markdown(command, output_fp):
+    md_template = get_markdown_template('rarefy-biom.md')
+    result = md_template.format(__version__, "dummy-md5", command)
     return result
 
 def get_biom_to_taxa_plots_markdown(map_fp, otu_table_fp, taxa_md_fp, command, output_fp):
@@ -179,12 +204,12 @@ def _get_depth_for_max_sequence_count(counts):
     return int(np.floor(res.x))
 
 def get_default_even_sampling_depth(biom):
-    counts = biom.T.sum()
+    counts = biom.sum()
     return _get_depth_for_max_sequence_count(counts)
 
 def explore_sampling_depth(biom):
     import seaborn as sns
-    counts = biom.T.sum()
+    counts = biom.sum()
     count_summary = counts.describe()
     total_num_samples = len(counts)
     total_num_sequences = counts.sum()
@@ -234,14 +259,14 @@ def explore_sampling_depth(biom):
 def rarify(biom, even_sampling_depth):
     data = []
     sample_ids = []
-    for e in biom.index:
-        count_vector = biom.loc[e]
+    for e in biom.columns:
+        count_vector = biom[e]
         if count_vector.sum() < even_sampling_depth:
             continue
         else:
             sample_ids.append(e)
             data.append(subsample_counts(count_vector.astype(int), even_sampling_depth))
-    return pd.DataFrame(data, index=sample_ids, columns=biom.columns)
+    return pd.DataFrame(np.asarray(data).T, index=biom.index, columns=sample_ids)
 
 
 def filter_dm_and_map(dm, map_df):
@@ -291,6 +316,7 @@ def interactive_distance_histograms(dm, sample_metadata):
 
 
 markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
+                      'rarefy-biom': get_rarefy_biom_markdown,
                       'biom-to-pcoa': get_biom_to_pcoa_markdown,
                       'biom-to-adiv': get_biom_to_adiv_markdown,
                       'biom-to-taxa-plots': get_biom_to_taxa_plots_markdown,

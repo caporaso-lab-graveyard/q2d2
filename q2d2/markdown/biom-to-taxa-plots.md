@@ -3,8 +3,8 @@ First, we'll load the table and the sample metadata.
 ```python
 >>> import pandas as pd
 >>> sample_md = pd.read_csv('{0}', sep='\t', index_col=0)
->>> table = pd.read_csv('{1}',   sep='\t', skiprows=1, index_col=0)
->>> table.drop('taxonomy', axis=1, inplace=True)
+>>> from q2d2 import load_table
+>>> table = load_table()
 >>> taxa = pd.read_csv('{2}', sep='\t', names=['TaxID', 'Species'], index_col=0, usecols=[0, 1], dtype=object)
 ```
 
