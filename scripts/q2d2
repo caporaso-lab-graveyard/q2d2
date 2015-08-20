@@ -5,24 +5,11 @@ import os.path
 import subprocess
 import click
 
-from q2d2 import markdown_templates, create_input_files
+from q2d2 import (create_input_files, write_job, get_index_markdown)
 
 @click.group()
 def cli():
     pass
-
-def _prep_files(study_name, output_fn, remove_existing=False):
-    os.makedirs(study_name, exist_ok=True)
-    result = os.path.join(study_name, output_fn)
-
-    if os.path.exists(result):
-        if remove_existing:
-            os.remove(result)
-        else:
-            print("%s has already been generated. Please remove or specify a "
-                  "different analysis directory." % result)
-            exit(1)
-    return result
 
 @cli.command('create-study')
 @click.option('--study-name', "study_name",
@@ -45,26 +32,15 @@ def create_study(study_name, sample_metadata_filepath,
                        otu_metadata=otu_metadata_filepath,
                        unrarefied_biom=unrarefied_biom_filepath,
                        tree=tree_filepath)
+    workflow_names = ['rarefy-biom', 'biom-to-taxa-plots', 'biom-to-pcoa',
+                      'biom-to-adiv']
+    for workflow_name in workflow_names:
+        write_job(workflow_name=workflow_name, study_name=study_name)
 
-    output_fn = _prep_files(study_name, '1.rarefy-biom.md')
-    markdown_s = markdown_templates['rarefy-biom']()
-    open(output_fn, 'w').write(markdown_s)
-
-    output_fn = _prep_files(study_name, '1.biom-to-taxa-plots.md')
-    markdown_s = markdown_templates['biom-to-taxa-plots']()
-    open(output_fn, 'w').write(markdown_s)
-
-    output_fn = _prep_files(study_name, '2.biom-to-pcoa.md')
-    markdown_s = markdown_templates['biom-to-pcoa']()
-    open(output_fn, 'w').write(markdown_s)
-
-    output_fn = _prep_files(study_name, '2.biom-to-adiv.md')
-    markdown_s = markdown_templates['biom-to-adiv']()
-    open(output_fn, 'w').write(markdown_s)
-
-    markdown_s = markdown_templates['index'](study_name, " ".join(argv))
-    output_fn = _prep_files(study_name, 'index.md', remove_existing=True)
-    open(output_fn, 'w').write(markdown_s)
+    #write_index()
+    markdown_s = get_index_markdown(study_name, " ".join(argv))
+    output_filepath = os.path.join(study_name, 'index.md')
+    open(output_filepath, 'w').write(markdown_s)
     command = ' '.join(['ipython', 'notebook', os.path.join(study_name, 'index.md')])
     print("", "Run the following to start the Jupyter analysis environment:", command, "", sep='\n')
 

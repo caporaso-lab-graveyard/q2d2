@@ -157,9 +157,9 @@ def table_summary(df):
     print("Sequence/sample count detail:")
     print(df.sum().describe())
 
-def get_markdown_template(fn):
+def get_markdown_template_filepath(workflow_name):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
-    return open(os.path.join(base_dir, "markdown", fn)).read()
+    return os.path.join(base_dir, "markdown", "%s.md" % workflow_name)
 
 def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
     shutil.copy(seqs_fp, os.path.join(output_fp, '.seqs'))
@@ -167,26 +167,22 @@ def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
     result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command, seqs_fp)
     return result
 
-def get_biom_to_pcoa_markdown():
-    return get_markdown_template('biom-to-pcoa.md')
 
-def get_biom_to_adiv_markdown():
-    return get_markdown_template('biom-to-adiv.md')
-
-def get_rarefy_biom_markdown():
-    return get_markdown_template('rarefy-biom.md')
-
-def get_biom_to_taxa_plots_markdown():
-    return get_markdown_template('biom-to-taxa-plots.md')
+def write_job(workflow_name, study_name):
+    markdown_template_filepath = get_markdown_template_filepath(workflow_name)
+    output_fn = os.path.split(markdown_template_filepath)[1]
+    job_filepath = os.path.join(study_name, output_fn)
+    shutil.copy(markdown_template_filepath, job_filepath)
 
 def get_index_markdown(study_name, command):
-    index_md_template = get_markdown_template('index.md')
+    index_md_template = open(get_markdown_template_filepath('index')).read()
     md_fps = glob.glob(os.path.join(study_name, '*.md'))
     md_fps.sort()
     toc = []
     for md_fp in md_fps:
         md_fn = os.path.split(md_fp)[1]
-        toc.append(' * [%s](%s)' % (md_fn.split('.')[1].replace('-', ' ').title(), md_fn))
+        title = os.path.splitext(md_fn)[0].replace('-', ' ').title()
+        toc.append(' * [%s](%s)' % (title, md_fn))
     toc = '\n'.join(toc)
     result = index_md_template.format(toc, study_name, __version__, command)
     return result
@@ -318,10 +314,3 @@ def interactive_distance_histograms(dm, sample_metadata):
     check_between = widgets.Checkbox(description='Show between category', value=True)
     extras = widgets.VBox(children=[check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
-
-markdown_templates = {'seqs-to-biom': get_seqs_to_biom_markdown,
-                      'rarefy-biom': get_rarefy_biom_markdown,
-                      'biom-to-pcoa': get_biom_to_pcoa_markdown,
-                      'biom-to-adiv': get_biom_to_adiv_markdown,
-                      'biom-to-taxa-plots': get_biom_to_taxa_plots_markdown,
-                      'index': get_index_markdown}
