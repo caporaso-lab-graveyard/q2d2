@@ -93,9 +93,9 @@ def load_table(rarefied=False):
     else:
         table_path = type_to_study_filepath['unrarefied_biom']
     result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
+    result.index = result.index.astype(str)
     if 'taxonomy' in result:
         result.drop('taxonomy', axis=1, inplace=True)
-        result.index = result.index.astype(str)
     return result
 
 def store_table(table, rarefied=False):
