@@ -31,10 +31,10 @@ from skbio.util import safe_md5
 from q2d2.wui import metadata_controls
 
 data_type_to_study_filename = {'sample_metadata': '.sample-md',
-                          'otu_metadata': '.otu-md',
-                          'unrarefied_biom': '.biom',
-                          'rarefied_biom': '.rarefied-biom',
-                          'tree': '.tree'}
+                               'otu_metadata': '.otu-md',
+                               'unrarefied_biom': '.biom',
+                               'rarefied_biom': '.rarefied-biom',
+                               'tree': '.tree'}
 
 # this may make sense as a database schema. can we use an existing schema, e.g. Qiita?
 WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
@@ -56,6 +56,15 @@ workflows = {
     'biom-to-bdiv': Workflow(
         'Beta diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom')
 }
+
+def get_data_info(study_id):
+    existing_data_types = get_existing_data_types(study_id)
+    data_info = []
+    for data_type in data_type_to_study_filename:
+        filename = data_type_to_study_filename[data_type]
+        exists = data_type in existing_data_types
+        data_info.append((data_type, filename, exists))
+    return data_info
 
 def get_workflow_info(workflow_id):
     workflow = workflows[workflow_id]
