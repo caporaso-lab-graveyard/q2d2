@@ -75,23 +75,29 @@ count_fs = {'exact': exact, 'split': split, 'rand': rand, 'last': last,
             'all': all}
 
 
-type_to_study_filepath = {'sample_metadata': '.sample-md',
+data_type_to_study_filename = {'sample_metadata': '.sample-md',
                           'otu_metadata': '.otu-md',
                           'unrarefied_biom': '.biom',
                           'rarefied_biom': '.rarefied-biom',
                           'tree': '.tree'}
 
+def get_data_filepath(data_type, study_id):
+    data_filepath = os.path.join(study_id, data_type_to_study_filename(data_type))
+    if not os.path.exists(data_filepath):
+        raise FileNotFoundError(data_filepath)
+    return data_filepath
+
 def create_input_files(study_name, **kwargs):
     for input_type, input_filepath in kwargs.items():
-        study_filepath = type_to_study_filepath[input_type]
+        study_filepath = data_type_to_study_filename[input_type]
         study_filepath = os.path.join(study_name, study_filepath)
         shutil.copy(input_filepath, study_filepath)
 
 def load_table(rarefied=False):
     if rarefied:
-        table_path = type_to_study_filepath['rarefied_biom']
+        table_path = data_type_to_study_filename['rarefied_biom']
     else:
-        table_path = type_to_study_filepath['unrarefied_biom']
+        table_path = data_type_to_study_filename['unrarefied_biom']
     result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
     result.index = result.index.astype(str)
     if 'taxonomy' in result:
@@ -100,9 +106,9 @@ def load_table(rarefied=False):
 
 def store_table(table, rarefied=False):
     if rarefied:
-        table_path = type_to_study_filepath['rarefied_biom']
+        table_path = data_type_to_study_filename['rarefied_biom']
     else:
-        table_path = type_to_study_filepath['unrarefied_biom']
+        table_path = data_type_to_study_filename['unrarefied_biom']
     with open(table_path, 'w') as table_file:
         table_file.write('# Constructed by [q2d2](github.com/gregcaporaso/q2d2)\n')
         table.to_csv(table_file, index_label="#OTU ID", sep='\t')
@@ -111,10 +117,10 @@ load_rarefied_table = partial(load_table, rarefied=True)
 store_rarefied_table = partial(store_table, rarefied=True)
 
 def load_sample_metadata():
-    return pd.read_csv(type_to_study_filepath['sample_metadata'], sep='\t', index_col=0)
+    return pd.read_csv(data_type_to_study_filename['sample_metadata'], sep='\t', index_col=0)
 
 def load_otu_metadata():
-    return pd.read_csv(type_to_study_filepath['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
+    return pd.read_csv(data_type_to_study_filename['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
                        index_col=0, usecols=[0, 1], dtype=object)
 
 def build_trie(seq_generator):
