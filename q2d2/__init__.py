@@ -351,3 +351,58 @@ def interactive_distance_histograms(dm, sample_metadata):
     check_between = widgets.Checkbox(description='Show between category', value=True)
     extras = widgets.VBox(children=[check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
+
+def distance_violinplots(dm, category, metadata, metric=None, order=['Within', 'Between']):
+    import seaborn as sns
+    within_bw_distances = get_within_between_distances(metadata, dm, category)
+    ax = sns.violinplot(x='Groups', y='Distance', data=within_bw_distances, order=order, orient='v')
+    ax.set_xlabel(category)
+    ax.set_ylabel(metric)
+    return ax
+
+def interactive_distance_violinplots(dms, sample_metadata):
+    
+    def on_update(category, metadata, metric, check_within, check_between):
+        order = []
+        if check_within:
+            order.append('Within')
+        if check_between:
+            order.append('Between')
+        
+        dm = dms[metric]
+        distance_violinplots(dm, category, metadata, metric, order=order)
+        
+    check_within = widgets.Checkbox(description='Show within category', value=True)
+    check_between = widgets.Checkbox(description='Show between category', value=True)
+    metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
+
+    
+    extras = widgets.VBox(children=[metric_but, check_within, check_between])
+    return metadata_controls(sample_metadata, on_update, extras)
+
+def compute_distance_matrices(
+               otu_table,
+               tree=None,
+               metrics=['weighted_unifrac', 'unweighted_unifrac', 'braycurtis', 'jaccard']):
+    dms = {}
+    for metric in metrics:
+        dm = pw_distances(metric, otu_table.T.values, otu_table.columns.tolist(), 
+                             tree=tree, otu_ids=otu_table.index.tolist())
+        dms[metric] = dm
+    return dms
+
+def interactive_plot_pcoa(metadata, dms):
+
+    def on_update(category, metadata, metric):
+        dm = dms[metric]
+        filtered_dm, _ = filter_dm_and_map(dm, metadata)
+        pc = pcoa(filtered_dm)
+        pc.plot(df=metadata,
+        column=category,
+        axis_labels=['PC 1', 'PC 2', 'PC 3'],
+        s=35).set_size_inches(12, 9)
+        
+    metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
+    extras = widgets.VBox(children=[metric_but])
+    
+    return metadata_controls(metadata, on_update, extras)
