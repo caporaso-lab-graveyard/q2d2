@@ -31,6 +31,7 @@ from skbio.util import safe_md5
 
 from q2d2.wui import metadata_controls
 
+# this may make sense as a database schema. can we use an existing schema, e.g. Qiita?
 WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
 Workflow = namedtuple('Workflow', ['title', 'inputs', 'outputs', 'category_id'])
 
