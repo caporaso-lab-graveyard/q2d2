@@ -13,7 +13,6 @@ import glob
 import math
 from functools import partial
 
-import marisa_trie
 import numpy as np
 import pandas as pd
 
@@ -27,71 +26,124 @@ from skbio.diversity.beta import pw_distances
 import skbio.diversity.alpha
 from skbio.stats.ordination import pcoa
 from skbio.stats import subsample_counts
+from skbio.util import safe_md5
 
 from q2d2.wui import metadata_controls
 
-WorkflowCategory = namedtuple('WorkflowCategory', ['name', 'title', 'workflows'])
-Workflow = namedtuple('Workflow', ['name', 'title', 'inputs'])
+data_type_to_study_filename = {'sample_metadata': '.sample-md',
+                               'otu_metadata': '.otu-md',
+                               'unrarefied_biom': '.biom',
+                               'rarefied_biom': '.rarefied-biom',
+                               'tree': '.tree'}
 
-workflows = [
-    WorkflowCategory('no-biom', 'No BIOM table', []),
-    WorkflowCategory('raw-biom', 'Raw (unnormalized) BIOM table', [
-        Workflow('rarefy-biom', 'Rarefy BIOM table', ['unrarefied_biom']),
-        Workflow('biom-to-taxa-plots', 'Taxonomy plots',
-                 ['unrarefied_biom', 'sample_metadata', 'otu_metadata']),
-    ]),
-    WorkflowCategory('normalized-biom', 'Normalized BIOM table', [
-        Workflow('biom-to-adiv', 'Alpha diversity', ['rarefied_biom', 'sample_metadata']),
-        Workflow('biom-to-bdiv', 'Beta diversity', ['rarefied_biom', 'sample_metadata']),
-    ])
-]
+# this may make sense as a database schema. can we use an existing schema, e.g. Qiita?
+WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
+Workflow = namedtuple('Workflow', ['title', 'inputs', 'outputs', 'category_id'])
 
-def create_index(study_name, command):
-    markdown_s = get_index_markdown(study_name, command)
-    output_filepath = os.path.join(study_name, 'index.md')
+workflow_categories = {
+    'no-biom': WorkflowCategory('No BIOM table'),
+    'raw-biom': WorkflowCategory('Raw (unnormalized) BIOM table'),
+    'normalized-biom': WorkflowCategory('Normalized BIOM table')
+}
+
+workflows = {
+    'rarefy-biom': Workflow(
+        'Rarefy BIOM table', {'unrarefied_biom'}, {'rarefied_biom'}, 'raw-biom'),
+    'biom-to-taxa-plots': Workflow(
+        'Taxonomy plots', {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}, {}, 'raw-biom'),
+    'biom-to-adiv': Workflow(
+        'Alpha diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom'),
+    'biom-to-bdiv': Workflow(
+        'Beta diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom')
+}
+
+def get_data_info(study_id):
+    existing_data_types = get_existing_data_types(study_id)
+    data_info = []
+    for data_type in data_type_to_study_filename:
+        filename = data_type_to_study_filename[data_type]
+        exists = data_type in existing_data_types
+        data_info.append((data_type, filename, exists))
+    return data_info
+
+def get_workflow_info(workflow_id):
+    workflow = workflows[workflow_id]
+    return {
+        'workflow-id': workflow_id,
+        'title': workflow.title,
+        'inputs': list(workflow.inputs),
+        'outputs': list(workflow.outputs),
+        'category-id': workflow.category_id
+    }
+
+def get_workflow_category_info(category_id):
+    return {
+        'category-id': category_id,
+        'title': workflow_categories[category_id].title
+    }
+
+def get_study_state(study_id):
+    existing_data_types = get_existing_data_types(study_id)
+
+    state = {
+        'study-id': study_id,
+        'workflow': {'exe': [], 'nexe': []},
+        'data': {}
+    }
+
+    for workflow_id in workflows:
+        workflow = workflows[workflow_id]
+        if workflow.inputs.issubset(existing_data_types):
+            state['workflow']['exe'].append(workflow_id)
+        else:
+            state['workflow']['nexe'].append(workflow_id)
+
+    for data_type in existing_data_types:
+        data_filepath = get_data_filepath(data_type, study_id)
+        with open(data_filepath, 'rb') as data_file:
+            # should we be using sha256 instead?
+            md5 = safe_md5(data_file).hexdigest()
+        state['data'][data_filepath] = md5
+
+    return state
+
+def get_system_info():
+    # what other info goes here? dependencies?
+    return {'version': __version__}
+
+def get_existing_data_types(study_id):
+    data_types = set()
+    for data_type in data_type_to_study_filename:
+        try:
+            get_data_filepath(data_type, study_id)
+        except FileNotFoundError:
+            pass
+        else:
+            data_types.add(data_type)
+    return data_types
+
+def create_index(study_id, command):
+    markdown_s = get_index_markdown(study_id, command)
+    output_filepath = os.path.join(study_id, 'index.md')
     open(output_filepath, 'w').write(markdown_s)
 
-def exact(trie, seq):
-    return [(trie[str(seq)], 1.)]
+def get_data_filepath(data_type, study_id):
+    data_filepath = os.path.join(study_id, data_type_to_study_filename[data_type])
+    if not os.path.exists(data_filepath):
+        raise FileNotFoundError(data_filepath)
+    return data_filepath
 
-def split(trie, seq):
-    oids = trie.items(str(seq))
-    oid_count = 1./len(oids)
-    return [(oid[1], oid_count) for oid in oids]
-
-def rand(trie, seq):
-    oids = trie.items(str(seq))
-    return [(random.choice(oids)[1], 1.)]
-
-def last(trie, seq):
-    oids = trie.items(str(seq))
-    return [(oids[-1][1], 1.)]
-
-def all(trie, seq):
-    oids = trie.items(str(seq))
-    return [(oid[1], 1.) for oid in oids]
-
-count_fs = {'exact': exact, 'split': split, 'rand': rand, 'last': last,
-            'all': all}
-
-
-type_to_study_filepath = {'sample_metadata': '.sample-md',
-                          'otu_metadata': '.otu-md',
-                          'unrarefied_biom': '.biom',
-                          'rarefied_biom': '.rarefied-biom',
-                          'tree': '.tree'}
-
-def create_input_files(study_name, **kwargs):
+def create_input_files(study_id, **kwargs):
     for input_type, input_filepath in kwargs.items():
-        study_filepath = type_to_study_filepath[input_type]
-        study_filepath = os.path.join(study_name, study_filepath)
+        study_filepath = data_type_to_study_filename[input_type]
+        study_filepath = os.path.join(study_id, study_filepath)
         shutil.copy(input_filepath, study_filepath)
 
 def load_table(rarefied=False):
     if rarefied:
-        table_path = type_to_study_filepath['rarefied_biom']
+        table_path = data_type_to_study_filename['rarefied_biom']
     else:
-        table_path = type_to_study_filepath['unrarefied_biom']
+        table_path = data_type_to_study_filename['unrarefied_biom']
     result = pd.read_csv(table_path, sep='\t', skiprows=1, index_col=0)
     result.index = result.index.astype(str)
     if 'taxonomy' in result:
@@ -100,9 +152,9 @@ def load_table(rarefied=False):
 
 def store_table(table, rarefied=False):
     if rarefied:
-        table_path = type_to_study_filepath['rarefied_biom']
+        table_path = data_type_to_study_filename['rarefied_biom']
     else:
-        table_path = type_to_study_filepath['unrarefied_biom']
+        table_path = data_type_to_study_filename['unrarefied_biom']
     with open(table_path, 'w') as table_file:
         table_file.write('# Constructed by [q2d2](github.com/gregcaporaso/q2d2)\n')
         table.to_csv(table_file, index_label="#OTU ID", sep='\t')
@@ -111,47 +163,11 @@ load_rarefied_table = partial(load_table, rarefied=True)
 store_rarefied_table = partial(store_table, rarefied=True)
 
 def load_sample_metadata():
-    return pd.read_csv(type_to_study_filepath['sample_metadata'], sep='\t', index_col=0)
+    return pd.read_csv(data_type_to_study_filename['sample_metadata'], sep='\t', index_col=0)
 
 def load_otu_metadata():
-    return pd.read_csv(type_to_study_filepath['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
+    return pd.read_csv(data_type_to_study_filename['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
                        index_col=0, usecols=[0, 1], dtype=object)
-
-def build_trie(seq_generator):
-    sequence_summary = {'sample_ids': {},
-                        'count': 0,
-                        'lengths': []}
-
-    def unpacker(seq):
-        sequence_summary['count'] += 1
-        sequence_summary['lengths'].append(len(seq))
-        sample_id = seq.metadata['id'].split('_', maxsplit=1)[0]
-        sample_ids = sequence_summary['sample_ids']
-        if not sample_id in sample_ids:
-            sample_ids[sample_id] = len(sample_ids)
-        return str(seq)
-
-    return marisa_trie.Trie(map(unpacker, seq_generator)), sequence_summary
-
-def biom_from_trie(trie, sids, seq_iter, count_f=exact):
-    """
-    """
-    # Build numpy array to store data. This will ultimately need to be a
-    # sparse table, though the sparse DataFrames seem to be pretty slow to
-    # populate.
-    data = np.zeros((len(sids), len(trie)))
-    # Create a result DataFrame. This will be our biom table.
-    result = pd.DataFrame(data, columns=range(len(trie)), index=sids)
-
-    for seq in seq_iter:
-        sid = seq.metadata['id'].split('_', maxsplit=1)[0]
-        for oid, count in count_f(trie, seq):
-            result[oid][sid] += count
-    # this requires two passes, there must be a better way to drop columns with zero count in place
-    result.drop([i for i,e in enumerate(result.sum()) if e == 0], axis=1, inplace=True)
-    return result.T
-
-
 
 def biom_to_adiv(metric, biom):
     metric_f = getattr(skbio.diversity.alpha, metric)
@@ -172,18 +188,11 @@ def dm_to_pcoa(dm, sample_md, category):
                           title=title,
                           s=35)
 
-
 def table_summary(df):
     print("Samples: ", len(df.columns))
     print("Observations: ", len(df.index))
     print("Sequence/sample count detail:")
     print(df.sum().describe())
-
-def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
-    shutil.copy(seqs_fp, os.path.join(output_fp, '.seqs'))
-    seqs_to_biom_md_template = get_markdown_template('seqs-to-biom.md')
-    result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command, seqs_fp)
-    return result
 
 def get_workflow_template_filepath(workflow_id):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
@@ -203,9 +212,9 @@ def delete_workflow(workflow_id, study_id):
     workflow_filepath = get_workflow_filepath(workflow_id, study_id)
     os.remove(workflow_filepath)
 
-def get_index_markdown(study_name, command):
+def get_index_markdown(study_id, command):
     index_md_template = open(get_workflow_template_filepath('index')).read()
-    md_fps = glob.glob(os.path.join(study_name, '*.md'))
+    md_fps = glob.glob(os.path.join(study_id, '*.md'))
     md_fps.sort()
     toc = []
     for md_fp in md_fps:
@@ -213,7 +222,7 @@ def get_index_markdown(study_name, command):
         title = os.path.splitext(md_fn)[0].replace('-', ' ').title()
         toc.append(' * [%s](%s)' % (title, md_fn))
     toc = '\n'.join(toc)
-    result = index_md_template.format(toc, study_name, __version__, command)
+    result = index_md_template.format(toc, study_id, __version__, command)
     return result
 
 def _summarize_even_sampling_depth(even_sampling_depth, counts):
@@ -297,7 +306,6 @@ def rarify(biom, even_sampling_depth):
             sample_ids.append(e)
             data.append(subsample_counts(count_vector.astype(int), even_sampling_depth))
     return pd.DataFrame(np.asarray(data).T, index=biom.index, columns=sample_ids)
-
 
 def filter_dm_and_map(dm, map_df):
     ids_to_exclude = set(dm.ids) - set(map_df.index.values)

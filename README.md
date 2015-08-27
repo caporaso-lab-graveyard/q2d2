@@ -17,6 +17,6 @@ pip install -e .
 Run the following commands to generate analysis notebooks:
 
 ```bash
-q2d2 create-study --study-name my-study --sample-metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --otu-metadata-filepath $PWD/example-data/keyboard/q191/otu-md.tsv --tree-filepath $PWD/example-data/keyboard/q191/rep-set.tre --unrarefied-biom-filepath $PWD/example-data/keyboard/q191/otu-table.tsv
+q2d2 create-study --study-id my-study --sample-metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --otu-metadata-filepath $PWD/example-data/keyboard/q191/otu-md.tsv --tree-filepath $PWD/example-data/keyboard/q191/rep-set.tre --unrarefied-biom-filepath $PWD/example-data/keyboard/q191/otu-table.tsv
 ipython notebook my-study/index.md
 ```

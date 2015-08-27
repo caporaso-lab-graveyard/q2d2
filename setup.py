@@ -62,7 +62,6 @@ setup(name='q2d2',
           'IPython >= 3.2.0',
           'ipymd',
           'click',
-          'marisa-trie',
           'seaborn'
       ],
       extras_require={'test': ["nose", "pep8", "flake8",
