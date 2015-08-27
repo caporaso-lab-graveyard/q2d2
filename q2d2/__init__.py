@@ -25,7 +25,7 @@ from scipy.optimize import minimize_scalar
 import skbio
 from skbio.diversity.beta import pw_distances
 import skbio.diversity.alpha
-from skbio.stats.ordination import PCoA
+from skbio.stats.ordination import pcoa
 from skbio.stats import subsample_counts
 
 from q2d2.wui import metadata_controls
@@ -160,12 +160,12 @@ def biom_to_adiv(metric, biom):
         results.append(metric_f(biom[e]))
     return pd.Series(results, index=biom.columns)
 
-def biom_to_dm(metric, biom):
+def biom_to_dm(metric, biom, tree=None):
     return pw_distances(metric=metric, counts=biom.T, ids=biom.columns)
 
 def dm_to_pcoa(dm, sample_md, category):
     title = "Samples colored by %s." % category
-    pcoa_results = PCoA(dm).scores()
+    pcoa_results = pcoa(dm)
     _ = pcoa_results.plot(df=sample_md,
                           column=category,
                           axis_labels=['PC 1', 'PC 2', 'PC 3'],
