@@ -179,23 +179,29 @@ def table_summary(df):
     print("Sequence/sample count detail:")
     print(df.sum().describe())
 
-def get_workflow_template_filepath(workflow_id):
-    base_dir = os.path.abspath(os.path.split(__file__)[0])
-    return os.path.join(base_dir, "markdown", "%s.md" % workflow_id)
-
 def get_seqs_to_biom_markdown(seqs_fp, count_f, command, output_fp):
     shutil.copy(seqs_fp, os.path.join(output_fp, '.seqs'))
     seqs_to_biom_md_template = get_markdown_template('seqs-to-biom.md')
     result = seqs_to_biom_md_template.format('.seqs', count_f, __version__, "dummy-md5", command, seqs_fp)
     return result
 
+def get_workflow_template_filepath(workflow_id):
+    base_dir = os.path.abspath(os.path.split(__file__)[0])
+    return os.path.join(base_dir, "markdown", "%s.md" % workflow_id)
+
+def get_workflow_filepath(workflow_id, study_id):
+    return os.path.join(study_id, "%s.md" % workflow_id)
+
 def create_workflow(workflow_id, study_id):
     workflow_template_filepath = get_workflow_template_filepath(workflow_id)
-    output_fn = os.path.split(workflow_template_filepath)[1]
-    workflow_filepath = os.path.join(study_id, output_fn)
+    workflow_filepath = get_workflow_filepath(workflow_id, study_id)
     if not os.path.exists(workflow_filepath):
         shutil.copy(workflow_template_filepath, workflow_filepath)
     return workflow_filepath
+
+def delete_workflow(workflow_id, study_id):
+    workflow_filepath = get_workflow_filepath(workflow_id, study_id)
+    os.remove(workflow_filepath)
 
 def get_index_markdown(study_name, command):
     index_md_template = open(get_workflow_template_filepath('index')).read()
