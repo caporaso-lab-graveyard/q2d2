@@ -27,28 +27,64 @@ from skbio.diversity.beta import pw_distances
 import skbio.diversity.alpha
 from skbio.stats.ordination import PCoA
 from skbio.stats import subsample_counts
+from skbio.util import safe_md5
 
 from q2d2.wui import metadata_controls
 
-WorkflowCategory = namedtuple('WorkflowCategory', ['name', 'title', 'workflows'])
-Workflow = namedtuple('Workflow', ['name', 'title', 'inputs'])
+WorkflowCategory = namedtuple('WorkflowCategory', ['id', 'title', 'workflows'])
+Workflow = namedtuple('Workflow', ['id', 'title', 'inputs'])
 
 workflows = [
     WorkflowCategory('no-biom', 'No BIOM table', []),
     WorkflowCategory('raw-biom', 'Raw (unnormalized) BIOM table', [
-        Workflow('rarefy-biom', 'Rarefy BIOM table', ['unrarefied_biom']),
+        Workflow('rarefy-biom', 'Rarefy BIOM table', {'unrarefied_biom'}),
         Workflow('biom-to-taxa-plots', 'Taxonomy plots',
-                 ['unrarefied_biom', 'sample_metadata', 'otu_metadata']),
+                 {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}),
     ]),
     WorkflowCategory('normalized-biom', 'Normalized BIOM table', [
-        Workflow('biom-to-adiv', 'Alpha diversity', ['rarefied_biom', 'sample_metadata']),
-        Workflow('biom-to-bdiv', 'Beta diversity', ['rarefied_biom', 'sample_metadata']),
+        Workflow('biom-to-adiv', 'Alpha diversity', {'rarefied_biom', 'sample_metadata'}),
+        Workflow('biom-to-bdiv', 'Beta diversity', {'rarefied_biom', 'sample_metadata'}),
     ])
 ]
 
-def create_index(study_name, command):
-    markdown_s = get_index_markdown(study_name, command)
-    output_filepath = os.path.join(study_name, 'index.md')
+def get_study_state(study_id):
+    existing_data_types = get_existing_data_types(study_id)
+
+    state = {'workflow': {'exe': [], 'nexe': []}, 'data': {}}
+
+    for workflow_category in workflows:
+        for workflow in workflow_category.workflows:
+            if workflow.inputs.issubset(existing_data_types):
+                state['workflow']['exe'].append(workflow.id)
+            else:
+                state['workflow']['nexe'].append(workflow.id)
+
+    for data_type in existing_data_types:
+        data_filepath = get_data_filepath(data_type, study_id)
+        with open(data_filepath, 'rb') as data_file:
+            md5 = safe_md5(data_file).hexdigest()
+        state['data'][data_filepath] = md5
+
+    return state
+
+def get_system_info():
+    # what other info goes here? dependencies?
+    return {'version': __version__}
+
+def get_existing_data_types(study_id):
+    data_types = set()
+    for data_type in data_type_to_study_filename:
+        try:
+            get_data_filepath(data_type, study_id)
+        except FileNotFoundError:
+            pass
+        else:
+            data_types.add(data_type)
+    return data_types
+
+def create_index(study_id, command):
+    markdown_s = get_index_markdown(study_id, command)
+    output_filepath = os.path.join(study_id, 'index.md')
     open(output_filepath, 'w').write(markdown_s)
 
 def exact(trie, seq):
@@ -82,15 +118,15 @@ data_type_to_study_filename = {'sample_metadata': '.sample-md',
                           'tree': '.tree'}
 
 def get_data_filepath(data_type, study_id):
-    data_filepath = os.path.join(study_id, data_type_to_study_filename(data_type))
+    data_filepath = os.path.join(study_id, data_type_to_study_filename[data_type])
     if not os.path.exists(data_filepath):
         raise FileNotFoundError(data_filepath)
     return data_filepath
 
-def create_input_files(study_name, **kwargs):
+def create_input_files(study_id, **kwargs):
     for input_type, input_filepath in kwargs.items():
         study_filepath = data_type_to_study_filename[input_type]
-        study_filepath = os.path.join(study_name, study_filepath)
+        study_filepath = os.path.join(study_id, study_filepath)
         shutil.copy(input_filepath, study_filepath)
 
 def load_table(rarefied=False):
@@ -209,9 +245,9 @@ def delete_workflow(workflow_id, study_id):
     workflow_filepath = get_workflow_filepath(workflow_id, study_id)
     os.remove(workflow_filepath)
 
-def get_index_markdown(study_name, command):
+def get_index_markdown(study_id, command):
     index_md_template = open(get_workflow_template_filepath('index')).read()
-    md_fps = glob.glob(os.path.join(study_name, '*.md'))
+    md_fps = glob.glob(os.path.join(study_id, '*.md'))
     md_fps.sort()
     toc = []
     for md_fp in md_fps:
@@ -219,7 +255,7 @@ def get_index_markdown(study_name, command):
         title = os.path.splitext(md_fn)[0].replace('-', ' ').title()
         toc.append(' * [%s](%s)' % (title, md_fn))
     toc = '\n'.join(toc)
-    result = index_md_template.format(toc, study_name, __version__, command)
+    result = index_md_template.format(toc, study_id, __version__, command)
     return result
 
 def _summarize_even_sampling_depth(even_sampling_depth, counts):

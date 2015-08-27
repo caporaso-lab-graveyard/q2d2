@@ -13,8 +13,8 @@ def cli():
     pass
 
 @cli.command('create-study')
-@click.option('--study-name', "study_name",
-              help="Descriptive name for your study.")
+@click.option('--study-id', "study_id",
+              help="Name for your study.")
 @click.option('--sample-metadata-filepath', "sample_metadata_filepath",
               help="Path to the sample metadata in tsv.")
 @click.option('--otu-metadata-filepath', "otu_metadata_filepath",
@@ -23,23 +23,23 @@ def cli():
               help="Path to the unrarefied BIOM table in classic (tsv) format.")
 @click.option('--tree-filepath', "tree_filepath",
               help="Path to the phylogenetic tree in newick format.")
-def create_study(study_name, sample_metadata_filepath,
+def create_study(study_id, sample_metadata_filepath,
                  otu_metadata_filepath, unrarefied_biom_filepath,
                  tree_filepath):
 
-    os.makedirs(study_name, exist_ok=False)
-    create_input_files(study_name,
+    os.makedirs(study_id, exist_ok=False)
+    create_input_files(study_id,
                        sample_metadata=sample_metadata_filepath,
                        otu_metadata=otu_metadata_filepath,
                        unrarefied_biom=unrarefied_biom_filepath,
                        tree=tree_filepath)
     for workflow_category in workflows:
         for workflow in workflow_category.workflows:
-            create_workflow(workflow_id=workflow.name, study_id=study_name)
+            create_workflow(workflow_id=workflow.id, study_id=study_id)
 
-    create_index(study_name, " ".join(argv))
+    create_index(study_id, " ".join(argv))
 
-    command = ' '.join(['ipython', 'notebook', os.path.join(study_name, 'index.md')])
+    command = ' '.join(['ipython', 'notebook', os.path.join(study_id, 'index.md')])
     print("", "Run the following to start the Jupyter analysis environment:", command, "", sep='\n')
 
 if __name__ == "__main__":
