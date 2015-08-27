@@ -32,7 +32,7 @@ from skbio.util import safe_md5
 from q2d2.wui import metadata_controls
 
 WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
-Workflow = namedtuple('Workflow', ['title', 'inputs', 'category_id'])
+Workflow = namedtuple('Workflow', ['title', 'inputs', 'outputs', 'category_id'])
 
 workflow_categories = {
     'no-biom': WorkflowCategory('No BIOM table'),
@@ -42,13 +42,13 @@ workflow_categories = {
 
 workflows = {
     'rarefy-biom': Workflow(
-        'Rarefy BIOM table', {'unrarefied_biom'}, 'raw-biom'),
+        'Rarefy BIOM table', {'unrarefied_biom'}, {'rarefied_biom'}, 'raw-biom'),
     'biom-to-taxa-plots': Workflow(
-        'Taxonomy plots', {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}, 'raw-biom'),
+        'Taxonomy plots', {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}, {}, 'raw-biom'),
     'biom-to-adiv': Workflow(
-        'Alpha diversity', {'rarefied_biom', 'sample_metadata'}, 'normalized-biom'),
+        'Alpha diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom'),
     'biom-to-bdiv': Workflow(
-        'Beta diversity', {'rarefied_biom', 'sample_metadata'}, 'normalized-biom')
+        'Beta diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom')
 }
 
 def get_workflow_info(workflow_id):
@@ -57,6 +57,7 @@ def get_workflow_info(workflow_id):
         'workflow-id': workflow_id,
         'title': workflow.title,
         'inputs': list(workflow.inputs),
+        'outputs': list(workflow.outputs),
         'category-id': workflow.category_id
     }
 
