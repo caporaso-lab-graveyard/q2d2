@@ -5,7 +5,7 @@ import os.path
 import subprocess
 import click
 
-from q2d2 import (create_input_files, write_job, get_index_markdown, workflows,
+from q2d2 import (create_input_files, create_workflow, get_index_markdown, workflows,
                   create_index)
 
 @click.group()
@@ -35,7 +35,7 @@ def create_study(study_name, sample_metadata_filepath,
                        tree=tree_filepath)
     for workflow_category in workflows:
         for workflow in workflow_category.workflows:
-            write_job(workflow_name=workflow.name, study_name=study_name)
+            create_workflow(workflow_id=workflow.name, study_id=study_name)
 
     create_index(study_name, " ".join(argv))
 
