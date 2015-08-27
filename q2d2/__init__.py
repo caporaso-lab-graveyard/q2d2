@@ -31,37 +31,61 @@ from skbio.util import safe_md5
 
 from q2d2.wui import metadata_controls
 
-WorkflowCategory = namedtuple('WorkflowCategory', ['id', 'title', 'workflows'])
-Workflow = namedtuple('Workflow', ['id', 'title', 'inputs'])
+WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
+Workflow = namedtuple('Workflow', ['title', 'inputs', 'category_id'])
 
-workflows = [
-    WorkflowCategory('no-biom', 'No BIOM table', []),
-    WorkflowCategory('raw-biom', 'Raw (unnormalized) BIOM table', [
-        Workflow('rarefy-biom', 'Rarefy BIOM table', {'unrarefied_biom'}),
-        Workflow('biom-to-taxa-plots', 'Taxonomy plots',
-                 {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}),
-    ]),
-    WorkflowCategory('normalized-biom', 'Normalized BIOM table', [
-        Workflow('biom-to-adiv', 'Alpha diversity', {'rarefied_biom', 'sample_metadata'}),
-        Workflow('biom-to-bdiv', 'Beta diversity', {'rarefied_biom', 'sample_metadata'}),
-    ])
-]
+workflow_categories = {
+    'no-biom': WorkflowCategory('No BIOM table'),
+    'raw-biom': WorkflowCategory('Raw (unnormalized) BIOM table'),
+    'normalized-biom': WorkflowCategory('Normalized BIOM table')
+}
+
+workflows = {
+    'rarefy-biom': Workflow(
+        'Rarefy BIOM table', {'unrarefied_biom'}, 'raw-biom'),
+    'biom-to-taxa-plots': Workflow(
+        'Taxonomy plots', {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}, 'raw-biom'),
+    'biom-to-adiv': Workflow(
+        'Alpha diversity', {'rarefied_biom', 'sample_metadata'}, 'normalized-biom'),
+    'biom-to-bdiv': Workflow(
+        'Beta diversity', {'rarefied_biom', 'sample_metadata'}, 'normalized-biom')
+}
+
+def get_workflow_info(workflow_id):
+    workflow = workflows[workflow_id]
+    return {
+        'workflow-id': workflow_id,
+        'title': workflow.title,
+        'inputs': list(workflow.inputs),
+        'category-id': workflow.category_id
+    }
+
+def get_workflow_category_info(category_id):
+    return {
+        'category-id': category_id,
+        'title': workflow_categories[category_id].title
+    }
 
 def get_study_state(study_id):
     existing_data_types = get_existing_data_types(study_id)
 
-    state = {'workflow': {'exe': [], 'nexe': []}, 'data': {}}
+    state = {
+        'study-id': study_id,
+        'workflow': {'exe': [], 'nexe': []},
+        'data': {}
+    }
 
-    for workflow_category in workflows:
-        for workflow in workflow_category.workflows:
-            if workflow.inputs.issubset(existing_data_types):
-                state['workflow']['exe'].append(workflow.id)
-            else:
-                state['workflow']['nexe'].append(workflow.id)
+    for workflow_id in workflows:
+        workflow = workflows[workflow_id]
+        if workflow.inputs.issubset(existing_data_types):
+            state['workflow']['exe'].append(workflow_id)
+        else:
+            state['workflow']['nexe'].append(workflow_id)
 
     for data_type in existing_data_types:
         data_filepath = get_data_filepath(data_type, study_id)
         with open(data_filepath, 'rb') as data_file:
+            # should we be using sha256 instead?
             md5 = safe_md5(data_file).hexdigest()
         state['data'][data_filepath] = md5
 

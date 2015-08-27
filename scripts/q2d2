@@ -33,9 +33,8 @@ def create_study(study_id, sample_metadata_filepath,
                        otu_metadata=otu_metadata_filepath,
                        unrarefied_biom=unrarefied_biom_filepath,
                        tree=tree_filepath)
-    for workflow_category in workflows:
-        for workflow in workflow_category.workflows:
-            create_workflow(workflow_id=workflow.id, study_id=study_id)
+    for workflow_id in workflows:
+        create_workflow(workflow_id=workflow_id, study_id=study_id)
 
     create_index(study_id, " ".join(argv))
 
