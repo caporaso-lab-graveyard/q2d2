@@ -136,6 +136,7 @@ def normalize(df):
 #plotting functions
 
 def plot_stacked_bar(df):
+    df = df.sort(axis=1)
     import seaborn as sns
     with plt.rc_context(dict(sns.axes_style("darkgrid"),
                          **sns.plotting_context("notebook", font_scale=1.8))):
