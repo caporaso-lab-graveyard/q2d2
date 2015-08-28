@@ -163,7 +163,7 @@ load_rarefied_table = partial(load_table, rarefied=True)
 store_rarefied_table = partial(store_table, rarefied=True)
 
 def load_tree():
-    return TreeNode.read(data_type_to_study_filename['tree'], format='newick')
+    return skbio.TreeNode.read(data_type_to_study_filename['tree'], format='newick')
 
 def load_sample_metadata():
     return pd.read_csv(data_type_to_study_filename['sample_metadata'], sep='\t', index_col=0)
