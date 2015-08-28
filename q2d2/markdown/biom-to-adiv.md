@@ -7,14 +7,15 @@ First, we'll load the table and the sample metadata.
 >>> sample_md = load_sample_metadata()
 >>> from q2d2 import load_rarefied_table
 >>> table = load_rarefied_table()
->>> metric = 'observed_otus'
+>>> from q2d2 import load_tree
+>>> tree = load_tree()
 ```
 
 Some text...
 
 ```python
->>> from q2d2 import biom_to_adiv
->>> alpha_diversities = biom_to_adiv(metric, table)
+>>> from q2d2 import compute_alphas
+>>> alpha_diversities = compute_alphas(table, tree)
 ```
 
 Some text...

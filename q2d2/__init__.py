@@ -172,12 +172,25 @@ def load_otu_metadata():
     return pd.read_csv(data_type_to_study_filename['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
                        index_col=0, usecols=[0, 1], dtype=object)
 
-def biom_to_adiv(metric, biom):
+def biom_to_adiv(metric, biom, tree=None):
     metric_f = getattr(skbio.diversity.alpha, metric)
     results = []
     for e in biom.columns:
-        results.append(metric_f(biom[e]))
+        if metric == 'faith_pd':
+            results.append(metric_f(biom[e], biom.index, tree))
+        else:
+            results.append(metric_f(biom[e]))
     return pd.Series(results, index=biom.columns)
+
+def compute_alphas(otu_table, tree=None,
+                   metrics=['chao1',
+                            'faith_pd',
+                            'observed_otus']):
+    alphas = {}
+    for metric in metrics:
+        alpha = biom_to_adiv(metric, otu_table, tree)
+        alphas[metric] = alpha 
+    return alphas
 
 def biom_to_dm(metric, biom, tree=None):
     return pw_distances(metric=metric, counts=biom.T, ids=biom.columns)

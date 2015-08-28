@@ -88,30 +88,34 @@ def merge_metadata_alpha_div(metadata, alpha_div):
     return metadata
 
 
-def plot_alpha(metadata, category, hue):
+def plot_alpha(metadata, category, hue, metric):
     import seaborn as sns
     with plt.rc_context(dict(sns.axes_style("darkgrid"),
                              **sns.plotting_context("notebook", font_scale=2))):
         width = len(metadata[category].unique())
         plt.figure(figsize=(width*4, 8))
-        sns.boxplot(x=category, y='Alpha diversity',
+        fig = sns.boxplot(x=category, y='Alpha diversity',
                     data=metadata.sort(category), hue=hue, palette='cubehelix')
+        fig.set_title(metric)
 
-def plot_alpha_diversity(metadata, alpha_div, category, hue=None):
+        
+def plot_alpha_diversity(metadata, alpha_div, category, hue=None, metric=None):
     metadata_alpha_div = merge_metadata_alpha_div(metadata, alpha_div)
-    plot_alpha(metadata_alpha_div, category, hue)
+    plot_alpha(metadata_alpha_div, category, hue, metric)
 
-def interactive_plot_alpha_diversity(metadata, alpha_diversity):
-    def on_update(category, metadata, Hue, check):
-
+    
+def interactive_plot_alpha_diversity(metadata, alpha_divs):
+    def on_update(category, metadata, Hue, check, metric):
+        alpha_diversity = alpha_divs[metric]
         if not check:
             Hue = None
-        plot_alpha_diversity(metadata, alpha_diversity, category, Hue)
+        plot_alpha_diversity(metadata, alpha_diversity, category, Hue, metric)
 
     check = widgets.Checkbox(Description='Plot Hue', Value=True)
     plt_hue = widgets.Dropdown(options=metadata.columns.tolist(), description='Hue')
-    extras = widgets.HBox(children=[plt_hue, check])
-
+    
+    metric_but = widgets.Dropdown(options=list(alpha_divs.keys()), description='Metrics')
+    extras = widgets.HBox(children=[plt_hue, check, metric_but])
 
     return metadata_controls(metadata, on_update, extras)
 
@@ -176,7 +180,7 @@ def plot_taxa_summary(otu_table, metadata, taxonomy, category, level='Phylum', m
         plot_stacked_bar(normalized_taxa)
 
 
-def interactive_plot_taxa_summary(metadata, otu_df, taxa_df, min_percent=1):
+def interactive_plot_taxa_summary(metadata, otu_df, taxa_df):
     shared_sample_ids = set.intersection(set(metadata.index.tolist()), set(otu_df.columns.tolist()))
     shared_otu_ids = set.intersection(set(taxa_df.index.tolist()), set(otu_df.index.tolist()))
     if len(shared_otu_ids) == 0:
@@ -186,12 +190,19 @@ def interactive_plot_taxa_summary(metadata, otu_df, taxa_df, min_percent=1):
     otu_df = otu_df[list(shared_sample_ids)]
     for index, level in enumerate(['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus']):
         taxa_df[level] = taxa_df['taxonomy'].apply(lambda x: ' '.join(x.split(' ')[:index + 1]))
-    def on_update(category, metadata, level):
+    def on_update(category, metadata, level, min_percent):
 
         plot_taxa_summary(otu_df, metadata, taxa_df, category, level, min_percent=min_percent)
 
     plt_level = widgets.Dropdown(options=['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'],
                                  description='Level')
-    extras = widgets.VBox(children=[plt_level])
+    
+    min_percent = widgets.BoundedFloatText(width=40,
+    value=1,
+    min=0.0,
+    max=10.0,
+    description='Min Percent:')
+    
+    extras = widgets.HBox(children=[plt_level, min_percent])
 
     return metadata_controls(metadata, on_update, extras)
