@@ -133,7 +133,7 @@ def get_taxa_counts(metadata_df, otu_df, category):
 
 def normalize(df):
     for col in df.columns:
-        normalized_col = df[col]/df[col].sum()
+        normalized_col = df[col]/df[col].sum()        
         df[col] = normalized_col
     return df
 
