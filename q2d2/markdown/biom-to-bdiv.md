@@ -31,5 +31,5 @@ Now we'll visually explore the distance distributions themselves.
 
 ```python
 >>> from q2d2 import interactive_distance_violinplots
->>> interactive_distance_violinplots(dm, sample_md)
+>>> interactive_distance_violinplots(dms, sample_md)
 ```
