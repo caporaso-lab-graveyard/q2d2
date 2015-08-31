@@ -15,5 +15,5 @@ Text describing workflow...
 ```python
 >>> %matplotlib inline
 >>> from q2d2.wui import interactive_plot_taxa_summary
->>> interactive_plot_taxa_summary(sample_md, table, taxa, min_percent=1)
+>>> interactive_plot_taxa_summary(sample_md, table)
 ```
