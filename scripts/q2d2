@@ -7,10 +7,15 @@ import click
 
 from q2d2 import (create_input_files, create_workflow, get_index_markdown, workflows,
                   create_index)
+from q2d2.server import start_server
 
 @click.group()
 def cli():
     pass
+
+@cli.command('serve')
+def serve():
+    start_server()
 
 @cli.command('create-study')
 @click.option('--study-id', "study_id",

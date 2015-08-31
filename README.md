@@ -21,3 +21,10 @@ Run the following commands to generate analysis notebooks:
 q2d2 create-study --study-id my-study --sample-metadata-filepath $PWD/example-data/keyboard/sample-md.tsv --otu-metadata-filepath $PWD/example-data/keyboard/q191/otu-md.tsv --tree-filepath $PWD/example-data/keyboard/q191/rep-set.tre --unrarefied-biom-filepath $PWD/example-data/keyboard/q191/otu-table.tsv
 ipython notebook my-study/index.md
 ```
+
+To use the graphical interface:
+```bash
+mkdir my_study
+cd my_study
+q2d2 serve
+```
