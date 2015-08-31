@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 
-# ----------------------------------------------------------------------------
-# Copyright (c) 2015--, scikit-bio development team.
-#
-# Distributed under the terms of the Modified BSD License.
-#
-# The full license is in the file COPYING.txt, distributed with this software.
-# ----------------------------------------------------------------------------
-
-import os
 import re
 import ast
 from setuptools import find_packages, setup
@@ -22,9 +13,8 @@ with open('q2d2/__init__.py', 'rb') as f:
     version = str(ast.literal_eval(hit))
 
 classes = """
-    Development Status :: 4 - Beta
+    Development Status :: 1 - Planning
     License :: OSI Approved :: BSD License
-    Topic :: Software Development :: Libraries
     Topic :: Scientific/Engineering
     Topic :: Scientific/Engineering :: Bio-Informatics
     Programming Language :: Python
@@ -37,26 +27,26 @@ classes = """
 """
 classifiers = [s.strip() for s in classes.split('\n') if s]
 
-description = ('Prototype/experiments for microbiome analyses.')
+description = 'Prototype/experiments for microbiome analyses.'
 
 with open('README.md') as f:
     long_description = f.read()
+
+authors = 'https://github.com/gregcaporaso/q2d2/graphs/contributors'
 
 setup(name='q2d2',
       version=version,
       license='BSD',
       description=description,
       long_description=long_description,
-      author="scikit-bio development team",
+      author=authors,
       author_email="gregcaporaso@gmail.com",
-      maintainer="scikit-bio development team",
+      maintainer=authors,
       maintainer_email="gregcaporaso@gmail.com",
-      url='http://caporasolab.us',
-      test_suite='nose.collector',
+      url='https://github.com/gregcaporaso/q2d2',
       packages=find_packages(),
       scripts=['scripts/q2d2'],
       package_data={'q2d2': ['q2d2/markdown/*md']},
-      setup_requires=['numpy >= 1.9.2'],
       install_requires=[
           'scikit-bio',
           'IPython < 4.0.0',
@@ -64,8 +54,5 @@ setup(name='q2d2',
           'click',
           'seaborn'
       ],
-      extras_require={'test': ["nose", "pep8", "flake8",
-                               "python-dateutil"],
-                      'doc': ["Sphinx == 1.2.2", "sphinx-bootstrap-theme"]},
       classifiers=classifiers,
       )
