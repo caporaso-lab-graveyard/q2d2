@@ -197,10 +197,10 @@ def interactive_plot_taxa_summary(metadata, otu_df, taxa_df):
     plt_level = widgets.Dropdown(options=['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'],
                                  description='Level')
     
-    min_percent = widgets.BoundedFloatText(width=40,
+    min_percent = widgets.BoundedFloatText(width=60,
     value=1,
     min=0.0,
-    max=10.0,
+    max=100.0,
     description='Min Percent:')
     
     extras = widgets.HBox(children=[plt_level, min_percent])
