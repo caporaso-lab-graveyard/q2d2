@@ -32,16 +32,18 @@ description = 'Prototype/experiments for microbiome analyses.'
 with open('README.md') as f:
     long_description = f.read()
 
+authors = 'https://github.com/gregcaporaso/q2d2/graphs/contributors'
+
 setup(name='q2d2',
       version=version,
       license='BSD',
       description=description,
       long_description=long_description,
-      author="Greg Caporaso",
+      author=authors,
       author_email="gregcaporaso@gmail.com",
-      maintainer="Greg Caporaso",
+      maintainer=authors,
       maintainer_email="gregcaporaso@gmail.com",
-      url='http://caporasolab.us',
+      url='https://github.com/gregcaporaso/q2d2',
       packages=find_packages(),
       scripts=['scripts/q2d2'],
       package_data={'q2d2': ['q2d2/markdown/*md']},
