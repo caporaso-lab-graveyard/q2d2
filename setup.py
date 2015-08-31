@@ -58,8 +58,8 @@ setup(name='q2d2',
       package_data={'q2d2': ['q2d2/markdown/*md']},
       setup_requires=['numpy >= 1.9.2'],
       install_requires=[
-          'scikit-bio >= 0.4.0',
-          'IPython >= 3.2.0',
+          'scikit-bio',
+          'IPython < 4.0.0',
           'ipymd',
           'click',
           'seaborn'

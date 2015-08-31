@@ -5,8 +5,9 @@ This repository is a publicly accessible prototype of some ideas that we're expl
 ## Installation (conda-based)
 
 ```bash
-conda create -n q2d2 python=3.4 scikit-bio ipython-notebook
+conda create -n q2d2 python=3.4 scikit-bio 'ipython-notebook<4.0.0' 'ipython<4.0.0'
 source activate q2d2
+pip install -U --no-deps https://github.com/biocore/scikit-bio/archive/master.zip
 git clone https://github.com/gregcaporaso/q2d2.git
 cd q2d2
 pip install -e .
