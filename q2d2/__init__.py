@@ -57,7 +57,7 @@ workflows = {
         'Beta diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom')
 }
 
-def get_data_info(study_id):
+def get_data_info(study_id='.'):
     existing_data_types = get_existing_data_types(study_id)
     data_info = []
     for data_type in data_type_to_study_filename:
@@ -82,7 +82,7 @@ def get_workflow_category_info(category_id):
         'title': workflow_categories[category_id].title
     }
 
-def get_study_state(study_id):
+def get_study_state(study_id='.'):
     existing_data_types = get_existing_data_types(study_id)
 
     state = {
@@ -111,7 +111,7 @@ def get_system_info():
     # what other info goes here? dependencies?
     return {'version': __version__}
 
-def get_existing_data_types(study_id):
+def get_existing_data_types(study_id='.'):
     data_types = set()
     for data_type in data_type_to_study_filename:
         try:
@@ -127,13 +127,13 @@ def create_index(study_id, command):
     output_filepath = os.path.join(study_id, 'index.md')
     open(output_filepath, 'w').write(markdown_s)
 
-def get_data_filepath(data_type, study_id):
+def get_data_filepath(data_type, study_id='.'):
     data_filepath = os.path.join(study_id, data_type_to_study_filename[data_type])
     if not os.path.exists(data_filepath):
         raise FileNotFoundError(data_filepath)
     return data_filepath
 
-def create_input_files(study_id, **kwargs):
+def create_input_files(study_id='.', **kwargs):
     for input_type, input_filepath in kwargs.items():
         study_filepath = data_type_to_study_filename[input_type]
         study_filepath = os.path.join(study_id, study_filepath)
@@ -189,7 +189,7 @@ def compute_alphas(otu_table, tree=None,
     alphas = {}
     for metric in metrics:
         alpha = biom_to_adiv(metric, otu_table, tree)
-        alphas[metric] = alpha 
+        alphas[metric] = alpha
     return alphas
 
 def biom_to_dm(metric, biom, tree=None):
@@ -214,17 +214,17 @@ def get_workflow_template_filepath(workflow_id):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
     return os.path.join(base_dir, "markdown", "%s.md" % workflow_id)
 
-def get_workflow_filepath(workflow_id, study_id):
+def get_workflow_filepath(workflow_id, study_id='.'):
     return os.path.join(study_id, "%s.md" % workflow_id)
 
-def create_workflow(workflow_id, study_id):
+def create_workflow(workflow_id, study_id='.'):
     workflow_template_filepath = get_workflow_template_filepath(workflow_id)
     workflow_filepath = get_workflow_filepath(workflow_id, study_id)
     if not os.path.exists(workflow_filepath):
         shutil.copy(workflow_template_filepath, workflow_filepath)
     return workflow_filepath
 
-def delete_workflow(workflow_id, study_id):
+def delete_workflow(workflow_id, study_id='.'):
     workflow_filepath = get_workflow_filepath(workflow_id, study_id)
     os.remove(workflow_filepath)
 
@@ -377,22 +377,22 @@ def distance_violinplots(dm, category, metadata, metric=None, order=['Within', '
     return ax
 
 def interactive_distance_violinplots(dms, sample_metadata):
-    
+
     def on_update(category, metadata, metric, check_within, check_between):
         order = []
         if check_within:
             order.append('Within')
         if check_between:
             order.append('Between')
-        
+
         dm = dms[metric]
         distance_violinplots(dm, category, metadata, metric, order=order)
-        
+
     check_within = widgets.Checkbox(description='Show within category', value=True)
     check_between = widgets.Checkbox(description='Show between category', value=True)
     metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
 
-    
+
     extras = widgets.VBox(children=[metric_but, check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
 
@@ -402,7 +402,7 @@ def compute_distance_matrices(
                metrics=['weighted_unifrac', 'unweighted_unifrac', 'braycurtis', 'jaccard']):
     dms = {}
     for metric in metrics:
-        dm = pw_distances(metric, otu_table.T.values, otu_table.columns.tolist(), 
+        dm = pw_distances(metric, otu_table.T.values, otu_table.columns.tolist(),
                              tree=tree, otu_ids=otu_table.index.tolist())
         dms[metric] = dm
     return dms
@@ -417,8 +417,8 @@ def interactive_plot_pcoa(metadata, dms):
         column=category,
         axis_labels=['PC 1', 'PC 2', 'PC 3'],
         s=35).set_size_inches(12, 9)
-        
+
     metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
     extras = widgets.VBox(children=[metric_but])
-    
+
     return metadata_controls(metadata, on_update, extras)

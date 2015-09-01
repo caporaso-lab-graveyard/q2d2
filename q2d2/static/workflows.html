@@ -1,0 +1,40 @@
+{% import q2d2 %}
+{% set state = q2d2.get_study_state()['workflow'] %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <ul id='group', class="list-group">
+        {% for id in state['exe'] %}
+            {% set details = q2d2.get_workflow_info(id) %}
+            <li class="list-group-item row" style="margin-right:0px;margin-left:0px;">
+                <a href='/workflow/{{ id }}' class="col-md-3" target="_blank">{{ details['title'] }}</a>
+                {% if details['outputs'] %}
+                    <span class="col-md-5 pull-right">Produces: {{", ".join(details['outputs'])}}</span>
+                {% end %}
+            </li>
+        {% end %}
+        {% for id in state['nexe'] %}
+            {% set details = q2d2.get_workflow_info(id) %}
+            <li class="list-group-item row disabled" style="margin-right:0px;margin-left:0px;">
+                    <span class="col-md-3">{{ details['title'] }}</span>
+                    <span class="col-md-5 pull-right">Missing: {{  ', '.join(set(details['inputs']) & set([fn for fn, _, exists in q2d2.get_data_info() if not exists])) }}</span>
+            </li>
+        {% end %}
+    </ul>
+    <script type="text/javascript">
+    jQuery(document).ready(function () {
+        var frame = $('#panel-content', window.parent.document);
+        var height = jQuery("body").height();
+        frame.height(height + 50);
+    });
+    </script>
+</body>
+</html>
