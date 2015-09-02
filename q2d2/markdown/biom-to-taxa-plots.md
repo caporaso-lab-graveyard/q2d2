@@ -1,4 +1,4 @@
-First, we'll load the table and the sample metadata.
+First, we'll load the table and the sample and OTU metadata.
 
 ```python
 >>> import pandas as pd
@@ -10,7 +10,7 @@ First, we'll load the table and the sample metadata.
 >>> taxa = load_otu_metadata()
 ```
 
-Text describing workflow...
+We can then interactively explore the taxonomic composition of the samples.
 
 ```python
 >>> %matplotlib inline
