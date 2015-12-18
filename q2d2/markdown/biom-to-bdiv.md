@@ -11,7 +11,7 @@ First, we'll load the table and the sample metadata.
 ```
 
 Next, we compute beta diversity distance matrices. This process
-is described in detail in [IAB's *Studying Biological Diversity*](http://readiab.org/book/0.1.1/3/1#4). We can visualize the distance matrix directly as a heatmap...
+is described in detail in [IAB's *Studying Biological Diversity*](http://readiab.org/book/0.1.1/3/1#4). For our first analysis, we will  visualize the distance matrix directly as a heatmap. In this case, darker colors indicate greater dissimilarity of samples.
 
 ```python
 >>> %matplotlib inline
@@ -20,14 +20,14 @@ is described in detail in [IAB's *Studying Biological Diversity*](http://readiab
 >>> _ = dms['unweighted_unifrac'].plot(cmap='Greens')
 ```
 
-... or more usefully, we can apply principal coordinates analysis, and view the first three principal coordinates as a 3D scatter plot.
+Next, we can apply principal coordinates analysis, and view the first three principal coordinates as a 3D scatter plot.
 
 ```python
 >>> from q2d2 import interactive_plot_pcoa
 >>> interactive_plot_pcoa(sample_md, dms)
 ```
 
-Now we'll visually explore the distance distributions themselves.
+Finally we'll visually explore the distance distributions themselves.
 
 ```python
 >>> from q2d2 import interactive_distance_violinplots
