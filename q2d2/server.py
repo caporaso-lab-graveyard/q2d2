@@ -76,7 +76,7 @@ def start_server(port=4444):
             ], debug=True)
 
     application.listen(port, max_buffer_size=10 * GB)
-    process = subprocess.Popen("ipython notebook --no-browser --port %d --port-retries 0" % jport, shell=True)
+    process = subprocess.Popen("jupyter notebook --no-browser --port %d --port-retries 0" % jport, shell=True)
     @atexit.register
     def shutdown():
         subprocess.call("ps -ef | awk '$3 == \"%d\" {print $2}' | xargs kill -15" % process.pid, shell=True)
