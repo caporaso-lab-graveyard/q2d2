@@ -22,8 +22,7 @@ from IPython.display import display
 from scipy.optimize import minimize_scalar
 
 import skbio
-from skbio.diversity.beta import pw_distances
-import skbio.diversity.alpha
+from skbio.diversity import alpha_diversity, beta_diversity
 from skbio.stats.ordination import pcoa
 from skbio.stats import subsample_counts
 from skbio.util import safe_md5
@@ -172,28 +171,28 @@ def load_otu_metadata():
     return pd.read_csv(data_type_to_study_filename['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
                        index_col=0, usecols=[0, 1], dtype=object)
 
-def biom_to_adiv(metric, biom, tree=None):
-    metric_f = getattr(skbio.diversity.alpha, metric)
-    results = []
-    for e in biom.columns:
-        if metric == 'faith_pd':
-            results.append(metric_f(biom[e], biom.index, tree))
-        else:
-            results.append(metric_f(biom[e]))
-    return pd.Series(results, index=biom.columns)
-
-def compute_alphas(otu_table, tree=None,
+def compute_alphas(biom, tree=None,
                    metrics=['chao1',
                             'faith_pd',
                             'observed_otus']):
     alphas = {}
     for metric in metrics:
-        alpha = biom_to_adiv(metric, otu_table, tree)
-        alphas[metric] = alpha
+        if metric == 'faith_pd':
+            alphas[metric] = alpha_diversity(metric, counts=np.asarray(biom.T),
+                                             ids=biom.columns,
+                                             otu_ids=biom.index, tree=tree)
+        else:
+            alphas[metric] = alpha_diversity(metric, counts=np.asarray(biom.T),
+                                                 ids=biom.columns)
     return alphas
 
-def biom_to_dm(metric, biom, tree=None):
-    return pw_distances(metric=metric, counts=biom.T, ids=biom.columns)
+# def biom_to_dm(metric, biom, tree=None):
+#     if metric in ['unweighted_unifrac', 'weighted_unifrac']:
+#         return beta_diversity(metric, counts=np.asarray(biom.T),
+#                               ids=biom.columns, otu_ids=biom.index, tree=tree)
+#     else:
+#         return beta_diversity(metric, counts=np.asarray(biom.T),
+#                               ids=biom.columns)
 
 def dm_to_pcoa(dm, sample_md, category):
     title = "Samples colored by %s." % category
@@ -397,14 +396,18 @@ def interactive_distance_violinplots(dms, sample_metadata):
     return metadata_controls(sample_metadata, on_update, extras)
 
 def compute_distance_matrices(
-               otu_table,
+               biom,
                tree=None,
                metrics=['weighted_unifrac', 'unweighted_unifrac', 'braycurtis', 'jaccard']):
     dms = {}
     for metric in metrics:
-        dm = pw_distances(metric, otu_table.T.values, otu_table.columns.tolist(),
-                             tree=tree, otu_ids=otu_table.index.tolist())
-        dms[metric] = dm
+        if metric in ['unweighted_unifrac', 'weighted_unifrac']:
+            dms[metric] = beta_diversity(metric, counts=np.asarray(biom.T),
+                                         ids=biom.columns, otu_ids=biom.index,
+                                         tree=tree)
+        else:
+            dms[metric] = beta_diversity(metric, counts=np.asarray(biom.T),
+                                         ids=biom.columns)
     return dms
 
 def interactive_plot_pcoa(metadata, dms):
