@@ -5,9 +5,9 @@ This repository is a publicly accessible prototype of some ideas that we're expl
 ## Installation (conda-based)
 
 ```bash
-conda create -n q2d2 python=3.4 scikit-bio 'ipython-notebook<4.0.0' 'ipython<4.0.0'
+conda create -n q2d2 -c https://conda.anaconda.org/biocore python=3.5 scikit-bio jupyter pyyaml
 source activate q2d2
-pip install -U --no-deps https://github.com/biocore/scikit-bio/archive/master.zip
+pip install https://github.com/rossant/ipymd/archive/master.zip
 git clone https://github.com/gregcaporaso/q2d2.git
 cd q2d2
 pip install -e .
@@ -24,7 +24,7 @@ ipython notebook my-study/index.md
 
 To use the graphical interface:
 ```bash
-mkdir my_study
-cd my_study
+mkdir my-study
+cd my-study
 q2d2 serve
 ```
