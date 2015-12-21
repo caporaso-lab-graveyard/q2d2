@@ -1,7 +1,7 @@
-from IPython.html import widgets
 from IPython.display import clear_output
 import pandas as pd
 
+import ipywidgets
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -24,14 +24,14 @@ def metadata_controls(df, callback, extras=None):
 
     def create_category(filters):
         def category_widget():
-            cat = widgets.Dropdown(options=df.columns.tolist())
-            group = widgets.SelectMultiple(width=130)
+            cat = ipywidgets.Dropdown(options=df.columns.tolist())
+            group = ipywidgets.SelectMultiple(width=130)
             group_updater = create_updater(group)
 
             cat.on_trait_change(group_updater, 'value')
             group.on_displayed(lambda: group_updater(cat.value))
 
-            category = widgets.VBox(children=[cat, group])
+            category = ipywidgets.VBox(children=[cat, group])
             filters.children += (category,)
 
         return category_widget
@@ -55,14 +55,14 @@ def metadata_controls(df, callback, extras=None):
         clear_output()
         callback(category, filter_category(filters), *extra_values)
 
-    filter_add = widgets.Button(description="Add Filter")
-    filter_rem = widgets.Button(description="Remove Filter")
-    go = widgets.Button(description="Go!")
+    filter_add = ipywidgets.Button(description="Add Filter")
+    filter_rem = ipywidgets.Button(description="Remove Filter")
+    go = ipywidgets.Button(description="Go!")
 
-    plt_cat = widgets.Dropdown(options=df.columns.tolist(), description='Plot')
+    plt_cat = ipywidgets.Dropdown(options=df.columns.tolist(), description='Plot')
 
-    menu = widgets.HBox(children=[plt_cat, go, filter_add, filter_rem])
-    filters = widgets.HBox(children=[])
+    menu = ipywidgets.HBox(children=[plt_cat, go, filter_add, filter_rem])
+    filters = ipywidgets.HBox(children=[])
 
     filter_add.on_click(lambda _: create_category(filters)())
     filter_rem.on_click(lambda _: remove_category(filters)())
@@ -71,7 +71,7 @@ def metadata_controls(df, callback, extras=None):
     children = [menu, filters]
     if extras is not None:
         children.append(extras)
-    return widgets.VBox(children=children)
+    return ipywidgets.VBox(children=children)
 
 #These are functions necessary for the alpha diversity plots
 def get_df_intersection(df1, df2):
@@ -98,12 +98,12 @@ def plot_alpha(metadata, category, hue, metric):
                     data=metadata.sort(category), hue=hue, palette='cubehelix')
         fig.set_title(metric)
 
-        
+
 def plot_alpha_diversity(metadata, alpha_div, category, hue=None, metric=None):
     metadata_alpha_div = merge_metadata_alpha_div(metadata, alpha_div)
     plot_alpha(metadata_alpha_div, category, hue, metric)
 
-    
+
 def interactive_plot_alpha_diversity(metadata, alpha_divs):
     def on_update(category, metadata, Hue, check, metric):
         alpha_diversity = alpha_divs[metric]
@@ -111,11 +111,11 @@ def interactive_plot_alpha_diversity(metadata, alpha_divs):
             Hue = None
         plot_alpha_diversity(metadata, alpha_diversity, category, Hue, metric)
 
-    check = widgets.Checkbox(Description='Plot Hue', Value=True)
-    plt_hue = widgets.Dropdown(options=metadata.columns.tolist(), description='Hue')
-    
-    metric_but = widgets.Dropdown(options=list(alpha_divs.keys()), description='Metrics')
-    extras = widgets.HBox(children=[plt_hue, check, metric_but])
+    check = ipywidgets.Checkbox(Description='Plot Hue', Value=True)
+    plt_hue = ipywidgets.Dropdown(options=metadata.columns.tolist(), description='Hue')
+
+    metric_but = ipywidgets.Dropdown(options=list(alpha_divs.keys()), description='Metrics')
+    extras = ipywidgets.HBox(children=[plt_hue, check, metric_but])
 
     return metadata_controls(metadata, on_update, extras)
 
@@ -133,7 +133,7 @@ def get_taxa_counts(metadata_df, otu_df, category):
 
 def normalize(df):
     for col in df.columns:
-        normalized_col = df[col]/df[col].sum()        
+        normalized_col = df[col]/df[col].sum()
         df[col] = normalized_col
     return df
 
@@ -194,15 +194,15 @@ def interactive_plot_taxa_summary(metadata, otu_df, taxa_df):
 
         plot_taxa_summary(otu_df, metadata, taxa_df, category, level, min_percent=min_percent)
 
-    plt_level = widgets.Dropdown(options=['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'],
+    plt_level = ipywidgets.Dropdown(options=['Kingdom', 'Phylum', 'Class', 'Order', 'Family', 'Genus', 'Species'],
                                  description='Level')
-    
-    min_percent = widgets.BoundedFloatText(width=60,
+
+    min_percent = ipywidgets.BoundedFloatText(width=60,
     value=1,
     min=0.0,
     max=100.0,
     description='Min Percent:')
-    
-    extras = widgets.HBox(children=[plt_level, min_percent])
+
+    extras = ipywidgets.HBox(children=[plt_level, min_percent])
 
     return metadata_controls(metadata, on_update, extras)

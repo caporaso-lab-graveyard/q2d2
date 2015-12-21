@@ -1,3 +1,8 @@
+---
+name: "Beta diversity"
+inputs: ['rarefied_biom', 'sample_metadata']
+outputs: []
+---
 First, we'll load the table and the sample metadata.
 
 ```python

@@ -1,3 +1,8 @@
+---
+name: "Taxonomy plots"
+inputs: ['unrarefied_biom', 'sample_metadata', 'otu_metadata']
+outputs: []
+---
 First, we'll load the table and the sample and OTU metadata.
 
 ```python
