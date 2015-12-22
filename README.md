@@ -83,7 +83,7 @@ If you add a plugin while your server is running, you'll need to restart your se
 
 For now, plugins can only contain Python 3 code, and can only use libraries that are dependencies of Q2D2 (listed [here](https://github.com/gregcaporaso/q2d2/blob/master/setup.py#L51)). In the future, it will be possible to write these in [any language that has a Jupyter kernel](https://github.com/ipython/ipython/wiki/IPython-kernels-for-other-languages), and they will be able to specify their own dependencies.
 
-Plugins are also currently limited to taking as input and creating as output the file types described above.
+Plugins are also currently limited to taking as input and creating as output the file types described under *Load Data Files* above.
 
 ## Usage: Command line interface
 
