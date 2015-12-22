@@ -1,3 +1,8 @@
+---
+name: "Alpha diversity"
+inputs: ['rarefied_biom', 'sample_metadata']
+outputs: []
+---
 First, we'll load the table and the sample metadata.
 
 ```python
@@ -18,7 +23,7 @@ Next, we'll compute alpha diversity for all of the samples in the rarefied BIOM 
 >>> alpha_diversities = compute_alphas(table, tree)
 ```
 
-Next, we can interactively explore the relative alpha diversities of these samples. Choose a  category to plot, optionally add some filtering criteria and a hue to color boxes by, and the metric you'd like to plot. If you'd like to compare multiple metrics, simply make a copy of the following cell. 
+Next, we can interactively explore the relative alpha diversities of these samples. Choose a  category to plot, optionally add some filtering criteria and a hue to color boxes by, and the metric you'd like to plot. If you'd like to compare multiple metrics, simply make a copy of the following cell.
 
 ```python
 >>> from q2d2.wui import interactive_plot_alpha_diversity

@@ -1,3 +1,8 @@
+---
+name: "Rarefy BIOM table"
+inputs: ['unrarefied_biom', 'sample_metadata']
+outputs: ['rarefied_biom']
+---
 # Construction of a BIOM table.
 
 First, we'll get summary statistics on our table.

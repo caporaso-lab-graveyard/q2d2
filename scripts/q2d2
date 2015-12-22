@@ -8,10 +8,42 @@ import click
 from q2d2 import (create_input_files, create_workflow, get_index_markdown, workflows,
                   create_index)
 from q2d2.server import start_server
+from q2d2.registry import (get_local_plugin_dir, yield_plugins, install_plugin,
+                           uninstall_plugin)
 
 @click.group()
 def cli():
     pass
+
+@cli.group('plugins')
+def plugins():
+    pass
+
+@plugins.command('list')
+def list():
+    for plugin in yield_plugins():
+        click.echo(plugin.name)
+
+@plugins.command('remove')
+@click.argument('name')
+def remove(name):
+    if uninstall_plugin(name):
+        click.echo("Plugin uninstalled.")
+    else:
+        click.echo("Plugin could not be uninstalled.")
+
+@plugins.command('add')
+@click.argument('name')
+@click.option('--link', is_flag=True)
+def remove(name, link):
+    if install_plugin(name, linked=link):
+        click.echo("Plugin installed.")
+    else:
+        click.echo("Plugin could not be installed.")
+
+@plugins.command('location')
+def location():
+    click.echo(get_local_plugin_dir())
 
 @cli.command('serve')
 def serve():

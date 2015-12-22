@@ -1,0 +1,7 @@
+name: Diversity Analysis
+
+workflows:
+    - biom-to-adiv.md
+    - biom-to-bdiv.md
+    - biom-to-taxa-plots.md
+    - rarefy-biom.md

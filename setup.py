@@ -52,7 +52,10 @@ setup(name='q2d2',
           'ipython',
           'ipymd',
           'click',
-          'seaborn'
+          'seaborn',
+          'appdirs',
+          'pyyaml',
+          'python-frontmatter'
       ],
       classifiers=classifiers,
       )

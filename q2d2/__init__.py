@@ -16,8 +16,8 @@ from functools import partial
 import numpy as np
 import pandas as pd
 
-from IPython.html import widgets
-from IPython.html.widgets import interactive, fixed, IntSlider
+import ipywidgets
+from ipywidgets import interactive, fixed, IntSlider
 from IPython.display import display
 from scipy.optimize import minimize_scalar
 
@@ -28,6 +28,7 @@ from skbio.stats import subsample_counts
 from skbio.util import safe_md5
 
 from q2d2.wui import metadata_controls
+from q2d2.registry import get_workflows
 
 data_type_to_study_filename = {'sample_metadata': '.sample-md',
                                'otu_metadata': '.otu-md',
@@ -35,26 +36,7 @@ data_type_to_study_filename = {'sample_metadata': '.sample-md',
                                'rarefied_biom': '.rarefied-biom',
                                'tree': '.tree'}
 
-# this may make sense as a database schema. can we use an existing schema, e.g. Qiita?
-WorkflowCategory = namedtuple('WorkflowCategory', ['title'])
-Workflow = namedtuple('Workflow', ['title', 'inputs', 'outputs', 'category_id'])
-
-workflow_categories = {
-    'no-biom': WorkflowCategory('No BIOM table'),
-    'raw-biom': WorkflowCategory('Raw (unnormalized) BIOM table'),
-    'normalized-biom': WorkflowCategory('Normalized BIOM table')
-}
-
-workflows = {
-    'rarefy-biom': Workflow(
-        'Rarefy BIOM table', {'unrarefied_biom'}, {'rarefied_biom'}, 'raw-biom'),
-    'biom-to-taxa-plots': Workflow(
-        'Taxonomy plots', {'unrarefied_biom', 'sample_metadata', 'otu_metadata'}, {}, 'raw-biom'),
-    'biom-to-adiv': Workflow(
-        'Alpha diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom'),
-    'biom-to-bdiv': Workflow(
-        'Beta diversity', {'rarefied_biom', 'sample_metadata'}, {}, 'normalized-biom')
-}
+workflows = {w.id: w for w in get_workflows()}
 
 def get_data_info(study_id='.'):
     existing_data_types = get_existing_data_types(study_id)
@@ -71,14 +53,7 @@ def get_workflow_info(workflow_id):
         'workflow-id': workflow_id,
         'title': workflow.title,
         'inputs': list(workflow.inputs),
-        'outputs': list(workflow.outputs),
-        'category-id': workflow.category_id
-    }
-
-def get_workflow_category_info(category_id):
-    return {
-        'category-id': category_id,
-        'title': workflow_categories[category_id].title
+        'outputs': list(workflow.outputs)
     }
 
 def get_study_state(study_id='.'):
@@ -213,19 +188,11 @@ def get_workflow_template_filepath(workflow_id):
     base_dir = os.path.abspath(os.path.split(__file__)[0])
     return os.path.join(base_dir, "markdown", "%s.md" % workflow_id)
 
-def get_workflow_filepath(workflow_id, study_id='.'):
-    return os.path.join(study_id, "%s.md" % workflow_id)
-
 def create_workflow(workflow_id, study_id='.'):
-    workflow_template_filepath = get_workflow_template_filepath(workflow_id)
-    workflow_filepath = get_workflow_filepath(workflow_id, study_id)
-    if not os.path.exists(workflow_filepath):
-        shutil.copy(workflow_template_filepath, workflow_filepath)
-    return workflow_filepath
+    return workflows[workflow_id].create_workflow(study_id)
 
 def delete_workflow(workflow_id, study_id='.'):
-    workflow_filepath = get_workflow_filepath(workflow_id, study_id)
-    os.remove(workflow_filepath)
+    workflows[workflow_id].delete_workflow(study_id)
 
 def get_index_markdown(study_id, command):
     index_md_template = open(get_workflow_template_filepath('index')).read()
@@ -304,11 +271,11 @@ def explore_sampling_depth(biom):
     def reset_depth(_):
         sampling_depth_slider.value = depth_for_max_sequence_count
 
-    reset = widgets.Button(icon='fa-refresh')
+    reset = ipywidgets.Button(icon='fa-refresh')
     reset.on_click(reset_depth)
 
     w = interactive(f, even_sampling_depth=sampling_depth_slider)
-    display(widgets.HBox(children=[w, reset]))
+    display(ipywidgets.HBox(children=[w, reset]))
 
 def rarify(biom, even_sampling_depth):
     data = []
@@ -362,9 +329,9 @@ def interactive_distance_histograms(dm, sample_metadata):
         if check_between:
             order.append('Between')
         distance_histogram(dm, category, metadata, order=order)
-    check_within = widgets.Checkbox(description='Show within category', value=True)
-    check_between = widgets.Checkbox(description='Show between category', value=True)
-    extras = widgets.VBox(children=[check_within, check_between])
+    check_within = ipywidgets.Checkbox(description='Show within category', value=True)
+    check_between = ipywidgets.Checkbox(description='Show between category', value=True)
+    extras = ipywidgets.VBox(children=[check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
 
 def distance_violinplots(dm, category, metadata, metric=None, order=['Within', 'Between']):
@@ -387,12 +354,12 @@ def interactive_distance_violinplots(dms, sample_metadata):
         dm = dms[metric]
         distance_violinplots(dm, category, metadata, metric, order=order)
 
-    check_within = widgets.Checkbox(description='Show within category', value=True)
-    check_between = widgets.Checkbox(description='Show between category', value=True)
-    metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
+    check_within = ipywidgets.Checkbox(description='Show within category', value=True)
+    check_between = ipywidgets.Checkbox(description='Show between category', value=True)
+    metric_but = ipywidgets.Dropdown(options=list(dms.keys()), description='Metrics')
 
 
-    extras = widgets.VBox(children=[metric_but, check_within, check_between])
+    extras = ipywidgets.VBox(children=[metric_but, check_within, check_between])
     return metadata_controls(sample_metadata, on_update, extras)
 
 def compute_distance_matrices(
@@ -421,7 +388,7 @@ def interactive_plot_pcoa(metadata, dms):
         axis_labels=['PC 1', 'PC 2', 'PC 3'],
         s=35).set_size_inches(12, 9)
 
-    metric_but = widgets.Dropdown(options=list(dms.keys()), description='Metrics')
-    extras = widgets.VBox(children=[metric_but])
+    metric_but = ipywidgets.Dropdown(options=list(dms.keys()), description='Metrics')
+    extras = ipywidgets.VBox(children=[metric_but])
 
     return metadata_controls(metadata, on_update, extras)
