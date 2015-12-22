@@ -140,7 +140,7 @@ def load_tree():
     return skbio.TreeNode.read(data_type_to_study_filename['tree'], format='newick')
 
 def load_sample_metadata():
-    return pd.read_csv(data_type_to_study_filename['sample_metadata'], sep='\t', index_col=0)
+    return pd.read_csv(data_type_to_study_filename['sample_metadata'], sep='\t', index_col=0, dtype=object)
 
 def load_otu_metadata():
     return pd.read_csv(data_type_to_study_filename['otu_metadata'], sep='\t', names=['OTU ID', 'taxonomy'],
