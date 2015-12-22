@@ -1,4 +1,4 @@
-name: Diversity Analysis
+name: Core Diversity Analyses
 
 workflows:
     - biom-to-adiv.md
