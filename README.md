@@ -1,3 +1,5 @@
+This was a public prototype exploring ideas for QIIME2 and has been superceded by the official [QIIME2 repository](https://github.com/biocore/qiime2).
+
 # q2d2: QIIME 2 is documentation-driven (a public prototype)
 
 This repository is a publicly accessible prototype of some ideas that we're exploring for QIIME 2. For some information on what's coming in QIIME 2, see [@gregcaporaso's blog post, "Toward QIIME 2"](https://qiime.wordpress.com/2015/10/30/toward-qiime-2/).
